@@ -26,7 +26,7 @@ from matplotlib.ticker import MultipleLocator
 # %% General variables and functions
 
 KM_PER_DEG = 111.1949
-cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV
+# cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV # commented by (H)
 
 # Set up AA domain 
 global AA_lat1, AA_lat2, AA_lon1, AA_lon2, box, dlat, dlon
@@ -75,7 +75,8 @@ def readevent(event_name, data_directory, local=False):
     event_dic = {}
     if not local:
         try: # QUAKEML
-            cat = obspy.read_events(data_directory+"../EVENTS-INFO/catalog.ml", format="QUAKEML")
+#            cat = obspy.read_events(data_directory+"../EVENTS-INFO/catalog.ml", format="QUAKEML")
+            cat = obspy.read_events("C:/Users/sommi/Desktop/stage 2026/animations/EVENT-INFO/catalog.ml", format="QUAKEML")
             ev  = cat[0]
             origin    = ev.preferred_origin()
             lat_event = origin.latitude
@@ -228,14 +229,16 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
     print ('Reading trace from '+str(tstart)+' to '+str(tend)+'s from the origin time...')
     
     for file in sorted(listdir(prodata_directory)):
-        if file.endswith('HHZ'):
+        if file.endswith('DPZ.D.mseed'): # 'initially HHZ (H) -> com à changer en dessous si fonctionne choisi les traces verticales (17/06)
             fsp = file.split(".")
             try:
-                # HHZ
+                # DPZ (H)
                 tr11    = obspy.read(prodata_directory+file, starttime=stime, endtime=etime) # read the trace
-                inv_sta = obspy.read_inventory(resp_directory+'STNXML.'+file) # read inventory
+                inv_sta = obspy.read_inventory(resp_directory+f"7M.{tr11[0].stats.station}.xml") # (H)
                 # Stations with data missing more than 10% of their samples are discarded.
                 data_count = (tend-tstart)*tr11[0].stats.sampling_rate - ((tend-tstart)*tr11[0].stats.sampling_rate*0.1) 
+                print("tr11 : ", tr11, type(tr11)) # (H)
+                print("tr11[0] :", tr11[0], type(tr11[0])) # (H)
                 if tr11[0].stats.npts < data_count:
                     continue              
             except Exception as e: # If file not present, skip this station
@@ -249,11 +252,11 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             dist, azi, bazi = gps2dist_azimuth(lat_event, lon_event, lat, lon)
             dist_deg        = kilometers2degrees(dist/1000.)
                 
-            # Ignore stations outside the plotting region
-            if lat < AA_lat1-0.1 or lat > AA_lat2+0.1:
-                continue
-            if lon < AA_lon1-0.1 or lon > AA_lon2+0.1:
-                continue
+            # Ignore stations outside the plotting region # commented by (H)
+#            if lat < AA_lat1-0.1 or lat > AA_lat2+0.1:
+#                continue
+#            if lon < AA_lon1-0.1 or lon > AA_lon2+0.1:
+#                continue
             
             tr11[0].stats.distance       = dist_deg
             tr11[0].stats.backazimuth    = bazi
@@ -262,8 +265,9 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             tr11[0].stats["coordinates"]["longitude"] = lon
             tr11[0].stats["coordinates"]["elevation"] = elv
             
-            try: # Read HHN
-                tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".HHN", starttime=stime, endtime=etime)              
+            try: # Read DPN (H)
+                tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPN.D.mseed", starttime=stime, endtime=etime) # (H)
+                print("tr22 : ", tr22)              
                 if tr22[0].stats.npts < data_count:
                     continue 
                 tr22[0].stats.distance       = dist_deg
@@ -274,22 +278,22 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                 tr22[0].stats["coordinates"]["elevation"] = elv               
             except Exception as e: # If file not present, skip this station
                 # print(e)
-                try: # Read HH1
-                    tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".HH1", starttime=stime, endtime=etime)
+                try: # Read DP1 (H)
+                    tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP1.D.mseed", starttime=stime, endtime=etime) # (H)
                     if tr22[0].stats.npts < data_count:
                         continue 
                 except Exception as e:
                     if plot_3c:
                         continue
                     else:
-                        # If there's no HHN channel
+                        # If there's no DPN channel (H)
                         tr22 = obspy.Trace(np.zeros(len(tr11[0].data)))
                         tr22.stats.network  = tr11[0].stats.network
                         tr22.stats.station  = tr11[0].stats.station
                         tr22.stats.location = tr11[0].stats.location 
                         tr22.stats.delta    = tr11[0].stats.delta
                         tr22.stats.starttime= tr11[0].stats.starttime
-                        tr22.stats.channel  = "HHN"
+                        tr22.stats.channel  = "DPN" # (H)
                         tr22.stats.distance    = dist_deg
                         tr22.stats.backazimuth = bazi
                         tr22.stats["coordinates"] = {}
@@ -298,8 +302,8 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                         tr22.stats["coordinates"]["elevation"] = elv
                         tr22 = obspy.Stream(traces=[tr22])
                         
-            try: # Read HHE
-                tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".HHE", starttime=stime, endtime=etime)
+            try: # Read DPE
+                tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPE.D.mseed", starttime=stime, endtime=etime) # (H)
                 if tr33[0].stats.npts < data_count:
                     continue                 
                 tr33[0].stats.distance    = dist_deg
@@ -309,8 +313,8 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                 tr33[0].stats["coordinates"]["longitude"] = lon
                 tr33[0].stats["coordinates"]["elevation"] = elv            
             except Exception as e:
-                try: # Read HH2
-                    tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".HH2", starttime=stime, endtime=etime)
+                try: # Read DP2 (H)
+                    tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP2.D.mseed", starttime=stime, endtime=etime) # (H)
                     if tr33[0].stats.npts < data_count:
                         continue 
                 except Exception as e: # If file not present, skip this station
@@ -318,14 +322,14 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                     if plot_3c:
                         continue
                     else:
-                        # If there's no HHE channel
+                        # If there's no DPE channel (H)
                         tr33 = obspy.Trace(np.zeros(len(tr11[0].data)))
                         tr33.stats.network  = tr11[0].stats.network
                         tr33.stats.station  = tr11[0].stats.station
                         tr33.stats.location = tr11[0].stats.location 
                         tr33.stats.delta    = tr11[0].stats.delta
                         tr33.stats.starttime= tr11[0].stats.starttime
-                        tr33.stats.channel     = "HHE"
+                        tr33.stats.channel     = "DPE" # (H)
                         tr33.stats.distance    = dist_deg
                         tr33.stats.backazimuth = bazi
                         tr33.stats["coordinates"] = {}
@@ -334,14 +338,14 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                         tr33.stats["coordinates"]["elevation"] = elv
                         tr33 = obspy.Stream(traces=[tr33])
                                     
-            if tr22[0].stats.channel == "HHN" and tr33[0].stats.channel == "HHE":
+            if tr22[0].stats.channel == "DPN" and tr33[0].stats.channel == "DPE": # (H)
                 tr1 = tr11
                 tr2 = tr22
                 tr3 = tr33    
-            elif tr22[0].stats.channel == "HH1" and tr33[0].stats.channel == "HH2":
+            elif tr22[0].stats.channel == "DP1" and tr33[0].stats.channel == "DP2": # (H)
                 trZ12 = tr11+tr22+tr33
                 try:
-                    invZNE = obspy.read_inventory(resp_directory+'STXML.'+fsp[0]+"."+fsp[1]+"."+fsp[2]+"*")
+                    invZNE = obspy.read_inventory(resp_directory+'STXML.'+fsp[0]+"."+fsp[1]+"."+fsp[2]+"*") # how to adapt this line for the nodes ? (H)
                     trZNE  = trZ12.copy()._rotate_to_zne(invZNE, components=('Z12'))   # rotate to ZNE
                 except Exception:
                     continue
@@ -426,9 +430,9 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
         else:
             continue
 
-        # Remove stations below 41N and beyond 52N
-        if lat <= 41. or lat > 52.:
-            continue
+        # Remove stations below 41N and beyond 52N # commented by (H)
+#        if lat <= 41. or lat > 52.:
+#            continue
             
         # Array list
         arraydic = {}
@@ -531,9 +535,11 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
         endtime   = obspy.UTCDateTime(time_event_sec + end)
     
     # Filter and downsample streams
-    print ('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1))
+#    print ('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1)) commented by (H)
     st_all_raw = st1+st2+st3
-    st_all_f   = filter_streams(st_all_raw, f1, f2)
+#    st_all_f   = filter_streams(st_all_raw, f1, f2) commented by (H)
+
+    st_all_f = st_all_raw # to skip the data process part (data already processed) (H)
     print(st_all_f)
     
     print ('Trimming traces from '+str(start)+'s to '+str(end)+'s...')
@@ -571,7 +577,7 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
     # Normalize each trace by max, abs value and store in matrix
     print ('Normalizing traces by the max, abs value...')
     for i, (tr1, tr2, tr3, bazi) in enumerate(zip(st, st_N, st_E, bazi_sta)):
-        # Rotate HHN/HHE to Radial/Transverse before normalizing
+        # Rotate DPN/DPE to Radial/Transverse before normalizing (HH -> DP (H))
         if tr1.stats.station != tr2.stats.station or tr1.stats.station != tr3.stats.station or tr2.stats.station != tr3.stats.station:
             print(tr1)
             print("Not the same station")

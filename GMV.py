@@ -18,10 +18,10 @@ from GMV_plotting import GMV_plot
 prog_starttime = time.time() # Execution time of this program
 
 ## Event name (Folder name)
-event_name = "test"
+event_name = "drake_earthquake"
 
 # local event or not?
-plot_local = True
+plot_local = False # init True (H)
 
 # plot 3 components for seismogram?
 plot_3c = True
@@ -30,23 +30,23 @@ plot_3c = True
 plot_rotate = True
 
 # Location of the data directoy
-directory = "/home/laura/Dropbox/Students/Hewen/movie/data/"
+directory = "C:/Users/sommi/Desktop/stage 2026/animations" # (H)
 # directory  = "/Users/angelling/Documents/obspyDMT/syngine_data/" 
 #directory  = "/home/aling/obspyDMT/CorePhases/" # Tris
 
 # Location of the figure directoy
-fig_directory = '/home/laura/Dropbox/Students/Hewen/movie/' 
+fig_directory = "/Users/sommi/Desktop/stage 2026/animations" # (H)
 #fig_directory = '/home/aling/obspyDMT/CorePhases/' # Tris
 
 # Path of AA logo
-logo_loc = '/home/laura/Dropbox/Students/Hewen/movie/maciv_small.png'
+logo_loc = 'C:/Users/sommi/Desktop/stage 2026/animations/LogoMaciv2-LargeFull_Color.png' # (H)
 #logo_loc = '/home/aling/AA_logo.png' # Tris
 
 # Waveform setting
 # Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
 start       = 0  # min: 0    # default: 500
 end         = 3600 # max: 7200 # default: 7000 
-decimate_fc = 5   # Downsample data by an integer factor (Default: 2)
+decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
 
 # Movie setting
 # Choose movie interval (default: 1s)
@@ -58,7 +58,7 @@ f1 = 0.005 # min freq, default 1/200
 f2 = 0.05  # max freq, default 1/50
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
-station = "FR.SALF." 
+station = "C001" # "FR.SALF." 
 
 # Select phases to plot on seismograms
 model  = "iasp91" # background model (e.g. iasp91/ak135)
@@ -84,8 +84,15 @@ vmax =  0.1   # colorbar max, default: 0.1
 data_directory    = directory + "/"
 prodata_directory = data_directory + "processed/"
 resp_directory    = data_directory + "stationxml/"
-syn_iasp91_directory = data_directory + "syngine_iasp91_2s/"
-syn_ak135_directory  = data_directory + "syngine_ak135f_2s/"
+syn_iasp91_directory = data_directory + "syngine_iasp91_2s/" # inutile (H)
+syn_ak135_directory  = data_directory + "syngine_ak135f_2s/" # inutile (H)
+
+#### (H) #####
+
+print("data_directory : ", data_directory)
+print("prodata_directory : ", prodata_directory)
+print("resp_directory : ", resp_directory)
+
 
 # Set up figure directory
 fig_directory = fig_directory + "figures_" + event_name + "/"
@@ -99,8 +106,9 @@ else:
     print("Movie directory "+movie_directory+ " exists.")
 
 ## Read event catalog (Read QUAKEML or pkl)
-# event_dic = readevent(event_name, data_directory)
 event_dic = readevent(event_name, data_directory, local=plot_local)
+print("event_dic :\n", event_dic) # (H)
+
 
 # ==================== 
 # %% Read data and inventory
@@ -108,11 +116,18 @@ event_dic = readevent(event_name, data_directory, local=plot_local)
 ## Read processed data and inventories
 data_dic = read_data_inventory(prodata_directory, resp_directory, event_dic, plot_3c=plot_3c, tend=end)
 
+print(data_dic) # (H)
+for key, value in data_dic.items():
+    print(key, value)
+
 # ==================== 
 # %% Normalize displacement and store good data
 
 ## Filter and normalize one single event
 GMV, stream_info = Normalize(data_dic, event_dic, f1, f2, start, end, decimate_fc=decimate_fc, threshold=None)
+
+print("GMV : ", GMV) # (H)
+print("stream_info : ", stream_info) # (H)
 
 # Select a reference station for plotting seismogram
 thechosenone = station_phases(GMV, station, event_dic, model, phases)

@@ -26,7 +26,7 @@ from matplotlib.ticker import MultipleLocator
 # %% General variables and functions
 
 KM_PER_DEG = 111.1949
-cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV
+# cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV # commented by (H)
 
 # Set up AA domain 
 global AA_lat1, AA_lat2, AA_lon1, AA_lon2, box, dlat, dlon
@@ -1498,7 +1498,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
         # Plot phase marker for channel Z
         phase_marker(thechosenone["arr"], ax2, "Z", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         
-        ax2.grid(b=True, which='major')
+        ax2.grid(which='major') # initially ax2.grid(b=True, which='major') but raised an error (H)
         ax2.set_xlim([start/d_time,end/d_time])
         ax2.set_ylim([-1.1,1.1]) 
         ax2.set_xticks(seismo_labels)
@@ -1514,7 +1514,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
             phase_marker(thechosenone["arr"], ax3, "N", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         ax3.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
-        ax3.grid(b=True, which='major')    
+        ax3.grid(which='major')  # # initially ax3.grid(b=True, which='major') but raised an error (H)
         ax3.set_xlim([start/d_time,end/d_time])
         ax3.set_ylim([-1.1,1.1]) 
         ax3.set_xticks(seismo_labels)
@@ -1531,7 +1531,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
             phase_marker(thechosenone["arr"], ax4, "E", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         ax4.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
-        ax4.grid(b=True, which='major')
+        ax4.grid(which='major') # ax4.grid(b=True, which='major')
         ax4.tick_params(axis="x",labelsize=12)
         if timelabel == "hr":
             ax4.set_xlabel('Time after origin [hr]', fontsize=14)
