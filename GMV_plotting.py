@@ -1480,7 +1480,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
                       '  Lat '+"%.2f"% event_dic["lat"] +' Lon '+"%.2f" % event_dic["lon"]+', Depth '+ "%.1f"% event_dic["depth"]+'km'+
                       ', Distance '+ "%.1f"% np.median(GMV["dist_sta"])+'\N{DEGREE SIGN}, '+str(len(name_sta_new))+' STA', fontsize=14)
     
-        # Add AA logo on plot
+        # Add logo on plot
         imagebox = OffsetImage(arr_img, zoom=0.45)
         imagebox.image.axes = ax1
         ab = AnnotationBbox(imagebox, (1, 1),
@@ -1492,7 +1492,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
         ax1.add_artist(ab)
         
         # Plot reference seismograms
-        # HHZ
+        # DPZ # initially HHZ (H)
         ax2.plot( (time_st+start)/d_time, GMV["GMV_Z"][thechosenone["sta_index"]], color="k", linewidth=1.5, label=thechosenone["sta_name"]+".Z")
         ax2.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         # Plot phase marker for channel Z
@@ -1505,7 +1505,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
         ax2.set_xticklabels([])
         ax2.legend(loc='lower right', fontsize=8, bbox_to_anchor=(0.99, -0.07))
         
-        # HHN/R
+        # DPN/R
         if plot_rotate:
             ax3.plot((time_st+start)/d_time, GMV["GMV_R"][thechosenone["sta_index"]], color="k", linewidth=1.5, label=thechosenone["sta_name"]+".R")
             phase_marker(thechosenone["arr"], ax3, "R", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
@@ -1514,7 +1514,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
             phase_marker(thechosenone["arr"], ax3, "N", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         ax3.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
-        ax3.grid(which='major')  # # initially ax3.grid(b=True, which='major') but raised an error (H)
+        ax3.grid(which='major')  # initially ax3.grid(b=True, which='major') but raised an error (H)
         ax3.set_xlim([start/d_time,end/d_time])
         ax3.set_ylim([-1.1,1.1]) 
         ax3.set_xticks(seismo_labels)
@@ -1522,7 +1522,7 @@ def GMV_plot(GMV, event_dic, stream_info, thechosenone,
         ax3.set_ylabel('Normalized Displacement', fontsize=11)
         ax3.legend(loc='lower right', fontsize=8, bbox_to_anchor=(0.99, -0.07))
         
-        # HHE/T
+        # DPE/T
         if plot_rotate:
             ax4.plot((time_st+start)/d_time, GMV["GMV_T"][thechosenone["sta_index"]], color="k", linewidth=1.5, label=thechosenone["sta_name"]+".T")
             phase_marker(thechosenone["arr"], ax4, "T", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)

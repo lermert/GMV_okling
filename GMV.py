@@ -11,6 +11,7 @@ from matplotlib.cbook import get_sample_data
 from operator import itemgetter
 from GMV_utils import readevent, read_data_inventory, Normalize, station_phases
 from GMV_plotting import GMV_plot
+from GMV_complt_func import GMV_plot_MACIV, map_maciv # (H)
 
 
 # ====================
@@ -30,16 +31,16 @@ plot_3c = True
 plot_rotate = True
 
 # Location of the data directoy
-directory = "C:/Users/sommi/Desktop/stage 2026/animations" # (H)
+directory = "C:/Users/sommi/Desktop/stage_ISTerre/animations" # (H)
 # directory  = "/Users/angelling/Documents/obspyDMT/syngine_data/" 
 #directory  = "/home/aling/obspyDMT/CorePhases/" # Tris
 
 # Location of the figure directoy
-fig_directory = "/Users/sommi/Desktop/stage 2026/animations" # (H)
+fig_directory = "/Users/sommi/Desktop/stage_ISTerre/animations/test_animations" # (H)
 #fig_directory = '/home/aling/obspyDMT/CorePhases/' # Tris
 
 # Path of AA logo
-logo_loc = 'C:/Users/sommi/Desktop/stage 2026/animations/LogoMaciv2-LargeFull_Color.png' # (H)
+logo_loc = 'C:/Users/sommi/Desktop/stage_ISTerre/animations/LogoMaciv2-LargeFull_Color.png' # (H)
 #logo_loc = '/home/aling/AA_logo.png' # Tris
 
 # Waveform setting
@@ -84,8 +85,8 @@ vmax =  0.1   # colorbar max, default: 0.1
 data_directory    = directory + "/"
 prodata_directory = data_directory + "processed/"
 resp_directory    = data_directory + "stationxml/"
-syn_iasp91_directory = data_directory + "syngine_iasp91_2s/" # inutile (H)
-syn_ak135_directory  = data_directory + "syngine_ak135f_2s/" # inutile (H)
+# syn_iasp91_directory = data_directory + "syngine_iasp91_2s/"
+# syn_ak135_directory  = data_directory + "syngine_ak135f_2s/"
 
 #### (H) #####
 
@@ -95,7 +96,7 @@ print("resp_directory : ", resp_directory)
 
 
 # Set up figure directory
-fig_directory = fig_directory + "figures_" + event_name + "/"
+fig_directory = fig_directory + "/" + "figures_" + event_name + "/" # (H) added "/" at the begenning
 if not path.exists(fig_directory):  # If figure directory doesn't exist, it will create one
     makedirs(fig_directory)
 movie_directory = fig_directory + "movie/"
@@ -107,7 +108,7 @@ else:
 
 ## Read event catalog (Read QUAKEML or pkl)
 event_dic = readevent(event_name, data_directory, local=plot_local)
-print("event_dic :\n", event_dic) # (H)
+#print("event_dic :\n", event_dic) # (H)
 
 
 # ==================== 
@@ -116,9 +117,9 @@ print("event_dic :\n", event_dic) # (H)
 ## Read processed data and inventories
 data_dic = read_data_inventory(prodata_directory, resp_directory, event_dic, plot_3c=plot_3c, tend=end)
 
-print(data_dic) # (H)
-for key, value in data_dic.items():
-    print(key, value)
+#print(data_dic) # (H)
+#for key, value in data_dic.items():
+#    print(key, value)
 
 # ==================== 
 # %% Normalize displacement and store good data
@@ -126,11 +127,15 @@ for key, value in data_dic.items():
 ## Filter and normalize one single event
 GMV, stream_info = Normalize(data_dic, event_dic, f1, f2, start, end, decimate_fc=decimate_fc, threshold=None)
 
-print("GMV : ", GMV) # (H)
-print("stream_info : ", stream_info) # (H)
+#print("GMV : ", GMV) # (H)
+#print("stream_info : ", stream_info) # (H)
 
 # Select a reference station for plotting seismogram
 thechosenone = station_phases(GMV, station, event_dic, model, phases)
+
+"""print("thechosenone : ")
+for key, value in thechosenone.items():
+    print(key, value)"""
 
 
 # %% Prepare for plotting 
@@ -143,12 +148,21 @@ with get_sample_data(logo_loc) as file_img:
 interval = int(stream_info["sample_rate"])  
 
 # %% Main GMV plotting      
-GMV_plot(GMV, event_dic, stream_info, thechosenone,
-         vmin, vmax, arr_img, 
-         movie_directory, timeframes=timeframes, timelabel=timelabel,
+#GMV_plot(GMV, event_dic, stream_info, thechosenone,
+#         vmin, vmax, arr_img, 
+#         movie_directory, timeframes=timeframes, timelabel=timelabel,
+#         save_option=save_option, save_dpi=save_dpi, 
+#         plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate, map_files)
+
+map_files = "/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/map_files" # (H)
+
+
+GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone, 
+         vmin, vmax, arr_img, map_files,
+         movie_directory=movie_directory, timeframes=timeframes, timelabel=timelabel,
          save_option=save_option, save_dpi=save_dpi, 
          plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate)
-    
+
     
 print("--- %.3f seconds ---" % (time.time() - prog_starttime))
 print("---- %.3f mins ----" % ((time.time() - prog_starttime)/60))

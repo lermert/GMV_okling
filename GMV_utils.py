@@ -75,8 +75,8 @@ def readevent(event_name, data_directory, local=False):
     event_dic = {}
     if not local:
         try: # QUAKEML
-#            cat = obspy.read_events(data_directory+"../EVENTS-INFO/catalog.ml", format="QUAKEML")
-            cat = obspy.read_events("C:/Users/sommi/Desktop/stage 2026/animations/EVENT-INFO/catalog.ml", format="QUAKEML")
+            cat = obspy.read_events(data_directory+"EVENT-INFO/catalog.ml", format="QUAKEML") # (H)
+#            cat = obspy.read_events("C:/Users/sommi/Desktop/stage 2026/animations/EVENT-INFO/catalog.ml", format="QUAKEML")
             ev  = cat[0]
             origin    = ev.preferred_origin()
             lat_event = origin.latitude
@@ -237,8 +237,6 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                 inv_sta = obspy.read_inventory(resp_directory+f"7M.{tr11[0].stats.station}.xml") # (H)
                 # Stations with data missing more than 10% of their samples are discarded.
                 data_count = (tend-tstart)*tr11[0].stats.sampling_rate - ((tend-tstart)*tr11[0].stats.sampling_rate*0.1) 
-                print("tr11 : ", tr11, type(tr11)) # (H)
-                print("tr11[0] :", tr11[0], type(tr11[0])) # (H)
                 if tr11[0].stats.npts < data_count:
                     continue              
             except Exception as e: # If file not present, skip this station
