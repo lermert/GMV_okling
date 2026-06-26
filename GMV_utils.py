@@ -538,7 +538,7 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
 #    st_all_f   = filter_streams(st_all_raw, f1, f2) commented by (H)
 
     st_all_f = st_all_raw # to skip the data process part (data already processed) (H)
-    print(st_all_f)
+
     
     print ('Trimming traces from '+str(start)+'s to '+str(end)+'s...')
     # Trim the filtered traces
