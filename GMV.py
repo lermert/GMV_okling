@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from matplotlib.cbook import get_sample_data
 from operator import itemgetter
 from GMV_utils import readevent, read_data_inventory, Normalize, station_phases
-from GMV_plotting import GMV_plot
 from GMV_complt_func import GMV_plot_MACIV # (H)
+from pathlib import Path # (H)
 
 
 # ====================
@@ -32,16 +32,13 @@ plot_rotate = True
 
 # Location of the data directoy
 directory = "/Users/sommi/Desktop/stage_ISTerre/animations" # (H)
-# directory  = "/Users/angelling/Documents/obspyDMT/syngine_data/" 
-#directory  = "/home/aling/obspyDMT/CorePhases/" # Tris
+
 
 # Location of the figure directoy
 fig_directory = "/Users/sommi/Desktop/stage_ISTerre/animations/test_animations" # (H)
-#fig_directory = '/home/aling/obspyDMT/CorePhases/' # Tris
 
 # Path of AA logo
 logo_loc = '/Users/sommi/Desktop/stage_ISTerre/animations/LogoMaciv2-LargeFull_Color.png' # (H)
-#logo_loc = '/home/aling/AA_logo.png' # Tris
 
 # Path to the map (has to be a png and the projection has to be Plate carree) (H)
 map_loc = '/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/fond_de_carte_clair_plate_carree.png'
@@ -68,7 +65,7 @@ f1 = 0.005 # min freq, default 1/200
 f2 = 0.05  # max freq, default 1/50
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
-station = "2025-10-10T20-19-20.7M.S083" # "FR.SALF." 
+station = "2025-10-10T20-19-20.7M.S062" # "FR.SALF." 
 
 # Select phases to plot on seismograms
 model  = "iasp91" # background model (e.g. iasp91/ak135)
@@ -102,6 +99,7 @@ print("data_directory : ", data_directory)
 print("prodata_directory : ", prodata_directory)
 print("resp_directory : ", resp_directory)
 
+##############
 
 # Set up figure directory
 fig_directory = fig_directory + "/" + "figures_" + event_name + "/" # (H) added "/" at the begenning
@@ -117,7 +115,6 @@ else:
 ## Read event catalog (Read QUAKEML or pkl)
 event_dic = readevent(event_name, data_directory, local=plot_local)
 
-
 # ==================== 
 # %% Read data and inventory
 
@@ -130,6 +127,11 @@ data_dic = read_data_inventory(prodata_directory, resp_directory, event_dic, plo
 
 ## Filter and normalize one single event
 GMV, stream_info = Normalize(data_dic, event_dic, f1, f2, start, end, decimate_fc=decimate_fc, threshold=None)
+
+print(GMV["name_sta"])
+print(GMV["lon_sta"])
+print(GMV["lat_sta"])
+
 
 
 # Select a reference station for plotting seismogram
@@ -150,7 +152,7 @@ interval = int(stream_info["sample_rate"])
 GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
          vmin, vmax, arr_img, movie_directory, map_loc=map_loc, map_region=map_region,
          timeframes=timeframes, timelabel=timelabel,
-         save_option=save_option, save_dpi=save_dpi, plot_save=False,
+         save_option=save_option, save_dpi=save_dpi, plot_save=True,
          plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate)
 
     
