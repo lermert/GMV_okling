@@ -21,8 +21,19 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 
-def extract(k, data_directory):
-    "extracts k stations from the mseed files and creates an mseed file with those traces (if data are in several mseed files, one per trace)"
+
+def extract_to_mutliple_mseed(data_directory, event_time, saving_directory):
+    "creates one mseed file per trace from one mseed file"
+
+    st = read(data_directory)
+    for trace in st:
+        name = f"{event_time}.7M.{trace.stats.station}.00.{trace.stats.channel}.D.mseed"
+        trace.write(saving_directory + "/" + name)
+
+
+
+def extract_to_one_mseed(k, data_directory):
+    "extracts k stations from one mseed files and creates an mseed file with those traces (if data are in several mseed files, one per trace)"
     files = os.listdir(data_directory)
     st = Stream()
 
@@ -40,7 +51,7 @@ def extract(k, data_directory):
 # use a png as a map
 def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone, 
              vmin, vmax, arr_img, movie_directory, map_loc, map_region,
-             timeframes=None, timelabel="s",
+             timeframes=None, timelabel="s", scale = 0.2,
              plot_save=True, save_option="png", save_dpi=120,
              plot_local=False, plot_3c=True, plot_rotate=True):
     
@@ -108,7 +119,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
     else:
         print("Ready to plot (vertical component only)!")  
         
-    print("Plots will be saved in " + movie_directory)
+    print("Plots will be saved in " + str(movie_directory))
         
     step = 0 # used only when plot_local is True
     for it in timeframes: # from start time to end time 
@@ -137,7 +148,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         # Plot the stations
         # Plot 3C motion
         if plot_3c:
-            scale = 0.2
+            scale = scale
             x_sta, y_sta = lon_sta_new+(GMV["GMV_E"][:,it]*scale), lat_sta_new+(GMV["GMV_N"][:,it]*scale)
 
             alpmap = ax1.scatter(x_sta, y_sta, c=GMV["GMV_Z"][:,it], edgecolors='k', marker='o', s=45, cmap='bwr', vmin=vmin, vmax=vmax, zorder=3, transform=ccrs.PlateCarree())
@@ -197,7 +208,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         # DPN/R
         if plot_rotate:
             ax3.plot((time_st+start)/d_time, GMV["GMV_R"][thechosenone["sta_index"]], color="k", linewidth=0.8, label=thechosenone["sta_name"]+".R") # linewidth=1.5 (H)
-            phase_marker(thechosenone["arr"], ax3, "R", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
+#            phase_marker(thechosenone["arr"], ax3, "R", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         else:    
             ax3.plot((time_st+start)/d_time, GMV["GMV_N"][thechosenone["sta_index"]], color="k", linewidth=0.8, label=thechosenone["sta_name"]+".N") # linewidth=1.5 (H)
             phase_marker(thechosenone["arr"], ax3, "N", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
@@ -243,9 +254,9 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
             else:
                 step = start+it*timestep 
             if plot_3c:
-                plt.savefig(movie_directory+ event_dic['event_name'] +"_3C_"+ "%07.1f"%(step)+"s."+save_option, dpi=save_dpi)
+                plt.savefig(movie_directory / str(event_dic['event_name'] +"_3C_"+ "%07.1f"%(step)+"s."+save_option), dpi=save_dpi)
             else:
-                plt.savefig(movie_directory+ event_dic['event_name'] +"_"+ "%07.1f"%(step)+"s."+save_option, dpi=save_dpi)
+                plt.savefig(movie_directory / str(event_dic['event_name'] +"_"+ "%07.1f"%(step)+"s."+save_option), dpi=save_dpi)
                 
             plt.clf()
             plt.close()
@@ -486,9 +497,12 @@ def quakeml_file(event_time=str, magnitude=float, client = "USGS", file_name="ca
     """
 
     client = Client("USGS")
-    t = UTCDateTime(event_time) # time of the drake passage event
+    t = UTCDateTime(event_time) # time of the event
     catalog = client.get_events(starttime=t-100, endtime=t+3*3600, minmagnitude=magnitude-1)
     file = catalog[0].write(file_name, format="QUAKEML")
     print(f"file '{file_name}' for the event \n {catalog[0]} \n created")
 
     return catalog[0].write(file_name, format="QUAKEML")
+
+if __name__ == '__main__':
+    quakeml_file(event_time="2025-09-18T12:34:08.937068Z", magnitude=3.58, file_name="catalog_saintes.ml")

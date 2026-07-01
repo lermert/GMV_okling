@@ -9,13 +9,15 @@ from os import path, listdir, makedirs
 import matplotlib.pyplot as plt
 from matplotlib.cbook import get_sample_data
 from operator import itemgetter
-from GMV_utils import readevent, read_data_inventory, Normalize, station_phases
-from GMV_complt_func import GMV_plot_MACIV # (H)
+from GMV_utils import readevent, read_data_inventory, normalize, station_phases
+from GMV_complt_func import GMV_plot_MACIV, generate_video # (H)
 from pathlib import Path # (H)
 
 
-# ====================
-# %% Parameter Box
+parent_file = Path(__file__).resolve().parent.parent # parent_file = WindowsPath('C:/Users/sommi/Desktop/stage_ISTerre/animations')
+
+############# PARAMETERS ##############################################################
+
 prog_starttime = time.time() # Execution time of this program
 
 ## Event name (Folder name)
@@ -30,21 +32,36 @@ plot_3c = True # init True (H)
 # ENZ (plot_rotate=False) or RTZ (plot_rotate=True)?
 plot_rotate = True
 
-# Location of the data directoy
-directory = "/Users/sommi/Desktop/stage_ISTerre/animations" # (H)
+# Create video or not ? (H)
+create_video = True
+
+# Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
+#directory = "/Users/sommi/Desktop/stage_ISTerre/animations" # (H) path_or
+
+data = parent_file / "data"
+
+prodata_directory = data / "processed"   # path to folder containing miniseed files (H)
+
+resp_directory = data / "stationxml"     # path to folder containing xml files (H)
+
+evt_info_directory = data / "EVENT_INFO" / "catalog.ml"  # path to pkl of QUAKEML file (H)
 
 
-# Location of the figure directoy
-fig_directory = "/Users/sommi/Desktop/stage_ISTerre/animations/test_animations" # (H)
+# Location of the figures directoy (where images will be stored) (H)
 
-# Path of AA logo
-logo_loc = '/Users/sommi/Desktop/stage_ISTerre/animations/LogoMaciv2-LargeFull_Color.png' # (H)
+movie_directory = parent_file / "test_animations" / str("figure_" + event_name) / "png_images"
 
-# Path to the map (has to be a png and the projection has to be Plate carree) (H)
-map_loc = '/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/fond_de_carte_clair_plate_carree.png'
-map_region = [1.8, 4.2, 44.8, 46.5]
+# Path to images (logo and map background)
 
-map_files = "/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/map_files" # obsolete (H)
+images = parent_file / "images"
+
+logo_loc = images / "LogoMaciv.png" # path to logo
+
+map_loc = images / "light_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
+
+
+# map_files = "/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/map_files" # obsolete (H)
 
 
 # Waveform setting
@@ -57,12 +74,16 @@ decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to av
 # Choose movie interval (default: 1s)
 # plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
 
-timeframes      = range(0, 7200, 30) # init range(0, 3600, 30) (H)
-timelabel       = "min"   # "s"/"min"/"hr" for seismograms
+timeframes      = range(0, 7200, 30)    # init range(0, 3600, 30) (H)
+timelabel       = "min"                 # "s"/"min"/"hr" for seismograms
+fps             = 10                    # frame per second parameter for movie creation (H)
 
-# Choose bandpass freq
-f1 = 0.005 # min freq, default 1/200
-f2 = 0.05  # max freq, default 1/50
+# Data process parameters (H)
+filer_type = "lowpass" # filter type
+
+f1 = 0.005  # min freq, default 1/200 (if bandpass)
+f2 = 0.05   # max freq, default 1/50 (if bandpass)
+f = 1       # cutoff frequency, default None (if low/high pass)
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
 station = "2025-10-10T20-19-20.7M.S062" # "FR.SALF." 
@@ -84,36 +105,18 @@ save_dpi    = 120   # Saved figure resolution (Default: 120)
 vmin = -0.1   # colorbar min, default: -0.1
 vmax =  0.1   # colorbar max, default: 0.1
 
-# ====================
-# %% Read event catalog 
-
-# Data directories
-data_directory    = directory + "/"
-prodata_directory = data_directory + "processed/"
-resp_directory    = data_directory + "stationxml/"
-
-
-#### (H) #####
-
-print("data_directory : ", data_directory)
-print("prodata_directory : ", prodata_directory)
-print("resp_directory : ", resp_directory)
-
-##############
+##################################################################################################
 
 # Set up figure directory
-fig_directory = fig_directory + "/" + "figures_" + event_name + "/" # (H) added "/" at the begenning
-if not path.exists(fig_directory):  # If figure directory doesn't exist, it will create one
-    makedirs(fig_directory)
-movie_directory = fig_directory + "movie/"
+
 if not path.exists(movie_directory):  # If movie directory doesn't exist, it will create one
     makedirs(movie_directory)
-    print("New movie directory "+movie_directory+" is created.")
+    print("New movie directory "+ str(movie_directory) +" is created.")
 else:
-    print("Movie directory "+movie_directory+ " exists.")
+    print("Movie directory "+ str(movie_directory) + " exists.")
 
 ## Read event catalog (Read QUAKEML or pkl)
-event_dic = readevent(event_name, data_directory, local=plot_local)
+event_dic = readevent(event_name, evt_info_directory, local=plot_local)
 
 # ==================== 
 # %% Read data and inventory
@@ -123,25 +126,19 @@ data_dic = read_data_inventory(prodata_directory, resp_directory, event_dic, plo
 
 
 # ==================== 
-# %% Normalize displacement and store good data
+# %% normalize displacement and store good data
 
-## Filter and normalize one single event
-GMV, stream_info = Normalize(data_dic, event_dic, f1, f2, start, end, decimate_fc=decimate_fc, threshold=None)
-
-print(GMV["name_sta"])
-print(GMV["lon_sta"])
-print(GMV["lat_sta"])
-
+# Filter and normalize one single event
+GMV, stream_info = normalize(data_dic, event_dic, f1, f2, start, end, ftype=filer_type, f=f, decimate_fc=decimate_fc, threshold=None)
 
 
 # Select a reference station for plotting seismogram
 thechosenone = station_phases(GMV, station, event_dic, model, phases)
 
 
+# prepare for plotting
 
-# %% Prepare for plotting 
-
-# AA logo
+# logo
 with get_sample_data(logo_loc) as file_img:
     arr_img = plt.imread(file_img, format='png')
     
@@ -151,9 +148,17 @@ interval = int(stream_info["sample_rate"])
 
 GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
          vmin, vmax, arr_img, movie_directory, map_loc=map_loc, map_region=map_region,
-         timeframes=timeframes, timelabel=timelabel,
+         timeframes=timeframes, timelabel=timelabel, scale=0.15,
          save_option=save_option, save_dpi=save_dpi, plot_save=True,
          plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate)
+
+
+if create_video :
+    try:
+        generate_video(movie_directory, movie_directory.parent, fps=fps)
+    except Exception :
+        print("Video could not be generated, try to use function generate_video in an independant program to compile png files")
+        
 
     
 print("--- %.3f seconds ---" % (time.time() - prog_starttime))

@@ -21,7 +21,7 @@ from obspy.signal.array_analysis import array_processing
 KM_PER_DEG = 111.1949
 # cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV # commented by (H)
 
-# Set up AA domain 
+# Set up domain 
 global AA_lat1, AA_lat2, AA_lon1, AA_lon2, box, dlat, dlon
 AA_lat1 = 40. # starting latitude  40N
 AA_lat2 = 52. # ending latitude    52N
@@ -45,7 +45,7 @@ def antipode(lat, lon):
     return lat, lon
 
 
-def readevent(event_name, data_directory, local=False):
+def readevent(event_name, evt_info_directory, local=False):
     """
     Read QUAKEML or pkl downloaded via obspyDMT
     
@@ -59,8 +59,8 @@ def readevent(event_name, data_directory, local=False):
     event_dic = {}
     if not local:
         try: # QUAKEML
-            cat = obspy.read_events(data_directory+"EVENT-INFO/catalog.ml", format="QUAKEML") # (H)
-#            cat = obspy.read_events("C:/Users/sommi/Desktop/stage 2026/animations/EVENT-INFO/catalog.ml", format="QUAKEML")
+#            cat = obspy.read_events(data_directory+"EVENT-INFO/catalog.ml", format="QUAKEML") # (H)
+            cat = obspy.read_events(evt_info_directory, format="QUAKEML") # (H)
             ev  = cat[0]
             origin    = ev.preferred_origin()
             lat_event = origin.latitude
@@ -87,7 +87,7 @@ def readevent(event_name, data_directory, local=False):
                         mag_type  = _i.magnitude_type
                         mag_event = _i.mag
         except FileNotFoundError: # Event pkl
-            ev_pkl = pickle.load(open(data_directory+"info/event.pkl", "rb"))
+            ev_pkl = pickle.load(open(evt_info_directory, "rb")) # (H)
             lat_event = ev_pkl.get('latitude')
             lon_event = ev_pkl.get('longitude')
             dep_event = ev_pkl.get('depth')
@@ -217,8 +217,8 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             fsp = file.split(".")
             try:
                 # DPZ (H)
-                tr11    = obspy.read(prodata_directory+file, starttime=stime, endtime=etime) # read the trace
-                inv_sta = obspy.read_inventory(resp_directory+f"7M.{tr11[0].stats.station}.xml") # (H)
+                tr11    = obspy.read(prodata_directory / file, starttime=stime, endtime=etime) # read the trace
+                inv_sta = obspy.read_inventory(resp_directory / f"7M.{tr11[0].stats.station}.xml") # (H)
                 # Stations with data missing more than 10% of their samples are discarded.
                 data_count = (tend-tstart)*tr11[0].stats.sampling_rate - ((tend-tstart)*tr11[0].stats.sampling_rate*0.1) 
                 if tr11[0].stats.npts < data_count:
@@ -248,7 +248,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             tr11[0].stats["coordinates"]["elevation"] = elv
             
             try: # Read DPN (H)
-                tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPN.D.mseed", starttime=stime, endtime=etime) # (H)
+                tr22 = obspy.read(prodata_directory / str(fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPN.D.mseed"), starttime=stime, endtime=etime) # (H)
                 print("tr22 : ", tr22)              
                 if tr22[0].stats.npts < data_count:
                     continue 
@@ -261,7 +261,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             except Exception as e: # If file not present, skip this station
                 # print(e)
                 try: # Read DP1 (H)
-                    tr22 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP1.D.mseed", starttime=stime, endtime=etime) # (H)
+                    tr22 = obspy.read(prodata_directory / str(fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP1.D.mseed"), starttime=stime, endtime=etime) # (H)
                     if tr22[0].stats.npts < data_count:
                         continue 
                 except Exception as e:
@@ -285,7 +285,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                         tr22 = obspy.Stream(traces=[tr22])
                         
             try: # Read DPE
-                tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPE.D.mseed", starttime=stime, endtime=etime) # (H)
+                tr33 = obspy.read(prodata_directory / str(fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DPE.D.mseed"), starttime=stime, endtime=etime) # (H)
                 if tr33[0].stats.npts < data_count:
                     continue                 
                 tr33[0].stats.distance    = dist_deg
@@ -296,7 +296,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
                 tr33[0].stats["coordinates"]["elevation"] = elv            
             except Exception as e:
                 try: # Read DP2 (H)
-                    tr33 = obspy.read(prodata_directory+fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP2.D.mseed", starttime=stime, endtime=etime) # (H)
+                    tr33 = obspy.read(prodata_directory / str(fsp[0]+"."+fsp[1]+"."+fsp[2]+".00.DP2.D.mseed"), starttime=stime, endtime=etime) # (H)
                     if tr33[0].stats.npts < data_count:
                         continue 
                 except Exception as e: # If file not present, skip this station
@@ -473,7 +473,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
     
     return data_inv_dic
 
-def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, threshold=None, plot_Xsec=False, plot_ZeroX=False): 
+def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=None, decimate_fc=2, threshold=None, plot_Xsec=False, plot_ZeroX=False): 
     """
     Filter and normalize streams for one single event
     
@@ -521,9 +521,7 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
     st_all_raw = st1+st2+st3
 #    st_all_f   = filter_streams(st_all_raw, f1, f2) # commented by (H)
 
-#    st_all_f = st_all_raw # to skip the data process part (data already processed) (H)
-
-    st_all_f = filter_streams(st_all_raw, f1, f2, f=1, ftype="lowpass") # filter data and apply lowpass filter at 1 Hz (H)
+    st_all_f = filter_streams(st_all_raw, f1, f2, f=f, ftype=ftype) # filter data and apply lowpass filter at 1 Hz (H)
 
     
     print ('Trimming traces from '+str(start)+'s to '+str(end)+'s...')
@@ -547,9 +545,7 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
     st   = st_all.select(channel="??Z")
     st_N = st_all.select(channel="??N")    
     st_E = st_all.select(channel="??E")
-    # print(len(st))
-    # print(len(st_N))
-    # print(len(st_E))
+
     for ttr in st:
         print(ttr.stats.sampling_rate, end="Hz, ")
     
@@ -558,7 +554,7 @@ def Normalize(data_inv_dic, event_dic, f1, f2, start, end, decimate_fc=2, thresh
     sample_rate = st[0].stats.sampling_rate # Sampling rate in Hz
     time_st     = st[0].times()     # stream time
     
-    # Normalize each trace by max, abs value and store in matrix
+    # normalize each trace by max, abs value and store in matrix
     print ('Normalizing traces by the max, abs value...')
     for i, (tr1, tr2, tr3, bazi) in enumerate(zip(st, st_N, st_E, bazi_sta)):
         # Rotate DPN/DPE to Radial/Transverse before normalizing (HH -> DP (H))
