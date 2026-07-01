@@ -21,7 +21,7 @@ parent_file = Path(__file__).resolve().parent.parent # parent_file = WindowsPath
 prog_starttime = time.time() # Execution time of this program
 
 ## Event name (Folder name)
-event_name = "drake_earthquake"
+event_name = "saintes_earthquake"
 
 # local event or not?
 plot_local = False # init True (H)
@@ -34,6 +34,7 @@ plot_rotate = True
 
 # Create video or not ? (H)
 create_video = True
+outfile = "saintes_earthquake_test_3.avi"
 
 # Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
 #directory = "/Users/sommi/Desktop/stage_ISTerre/animations" # (H) path_or
@@ -44,7 +45,7 @@ prodata_directory = data / "processed"   # path to folder containing miniseed fi
 
 resp_directory = data / "stationxml"     # path to folder containing xml files (H)
 
-evt_info_directory = data / "EVENT_INFO" / "catalog.ml"  # path to pkl of QUAKEML file (H)
+evt_info_directory = data / "EVENT_INFO" / "catalog_saintes.ml"  # path to pkl of QUAKEML file (H)
 
 
 # Location of the figures directoy (where images will be stored) (H)
@@ -67,23 +68,23 @@ map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, la
 # Waveform setting
 # Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
 start       = 0  # min: 0    # default: 500
-end         = 7200 # max: 7200 # default: 7000 
+end         = 900 # max: 7200 # default: 7000 
 decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
 
 # Movie setting
 # Choose movie interval (default: 1s)
 # plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
 
-timeframes      = range(0, 7200, 30)    # init range(0, 3600, 30) (H)
-timelabel       = "min"                 # "s"/"min"/"hr" for seismograms
+timeframes      = range(0, 900, 10)    # init range(0, 3600, 30) (H)
+timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
 fps             = 10                    # frame per second parameter for movie creation (H)
 
 # Data process parameters (H)
-filer_type = "lowpass" # filter type
+filer_type = "bandpass" # filter type
 
-f1 = 0.005  # min freq, default 1/200 (if bandpass)
-f2 = 0.05   # max freq, default 1/50 (if bandpass)
-f = 1       # cutoff frequency, default None (if low/high pass)
+f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
+f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
+f = 1   # cutoff frequency, default None (if low/high pass)
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
 station = "2025-10-10T20-19-20.7M.S062" # "FR.SALF." 
@@ -148,14 +149,17 @@ interval = int(stream_info["sample_rate"])
 
 GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
          vmin, vmax, arr_img, movie_directory, map_loc=map_loc, map_region=map_region,
-         timeframes=timeframes, timelabel=timelabel, scale=0.15,
+         timeframes=timeframes, timelabel=timelabel, scale=0.65,
          save_option=save_option, save_dpi=save_dpi, plot_save=True,
          plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate)
 
 
 if create_video :
     try:
+        print(movie_directory)
+        print(movie_directory.parent / outfile)
         generate_video(movie_directory, movie_directory.parent, fps=fps)
+
     except Exception :
         print("Video could not be generated, try to use function generate_video in an independant program to compile png files")
         

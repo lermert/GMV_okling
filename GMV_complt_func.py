@@ -23,12 +23,20 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 def extract_to_mutliple_mseed(data_directory, event_time, saving_directory):
-    "creates one mseed file per trace from one mseed file"
+    """creates one mseed file per trace from one mseed file
+
+    :param data_directory: path to the folder containing the mseed file
+    :param event_time: yyyy-mm-ddThh-mm-ss ex: 2025-09-18T12-34-08
+    :param saving_directory: path to the folder where mseed files will be saved
+    """
 
     st = read(data_directory)
+    print(f"files will be saved in {saving_directory}")
     for trace in st:
         name = f"{event_time}.7M.{trace.stats.station}.00.{trace.stats.channel}.D.mseed"
         trace.write(saving_directory + "/" + name)
+        print(name, "saved")
+
 
 
 
@@ -404,7 +412,7 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
         print("Plots are not saved. End of plotting.")
 
 def generate_video(image_folder, video_name, fps = 15):
-    """Generates a video"""
+    """Generates a video (.avi format)"""
 
 
     images = [img for img in os.listdir(image_folder) if img.endswith((".jpg", ".jpeg", ".png"))]
@@ -483,26 +491,3 @@ def middle_station(map_region, prodata_directory, resp_directory):
     index_min = mid_dist.index(min(mid_dist))
 
     return name[index_min]
-
-def quakeml_file(event_time=str, magnitude=float, client = "USGS", file_name="catalog.ml"):
-    """
-    Fetch data via client to create a quakeml file for the event.
-    Supposes it'll find only one event fitting information.
-    
-    :param event_time: time of the event
-    :param magnitude: magnitude of the event
-    :param client: client used for the request by obspy, default: "USGS"
-    :param file_name: name of the out file, default: "catalog.ml"
-    :return: quakeml file with data of the event
-    """
-
-    client = Client("USGS")
-    t = UTCDateTime(event_time) # time of the event
-    catalog = client.get_events(starttime=t-100, endtime=t+3*3600, minmagnitude=magnitude-1)
-    file = catalog[0].write(file_name, format="QUAKEML")
-    print(f"file '{file_name}' for the event \n {catalog[0]} \n created")
-
-    return catalog[0].write(file_name, format="QUAKEML")
-
-if __name__ == '__main__':
-    quakeml_file(event_time="2025-09-18T12:34:08.937068Z", magnitude=3.58, file_name="catalog_saintes.ml")
