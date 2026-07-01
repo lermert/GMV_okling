@@ -49,17 +49,17 @@ The files paths should look like the following :
 
 parent_file/ (no particular name)
 │
-├── data/  
+├── data/
 │   ├── processed/
-│   │   └── mseed files (one per trace)*
+│   │   └── mseed files (one per trace)
 │   │
 │   ├── stationxml/
 │   │   └── xml files (one per station)
 │   │
 │   └── EVENT_INFO/
 │       └── .ml or .pkl file about event
-│           
-├── images/  
+│
+├── images/
 │   ├── map backgroung file (has to be a png and have a Plate carree projection)
 │   └── logo png
 │
