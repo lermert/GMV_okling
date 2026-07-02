@@ -20,72 +20,61 @@ parent_file = Path(__file__).resolve().parent.parent
 prog_starttime = time.time() # Execution time of this program
 
 ## Event name (Folder name)
-event_name = "saintes_earthquake"
+event_name = "drake_passage_earthquake"
 
 # local event or not?
-plot_local = True
+plot_local = False
 
 # plot 3 components for seismogram?
-plot_3c = True # init True (H)
+plot_3c = True
 
 # ENZ (plot_rotate=False) or RTZ (plot_rotate=True)?
 plot_rotate = True
 
 # Create video or not ? (H)
 create_video = True
-outfile = "saintes_earthquake_test_3.avi"
+outfile = "drake_passage_earthquake.avi" # has to end by .avi
 
 # Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
-#directory = "/Users/sommi/Desktop/stage_ISTerre/animations" # (H) path_or
-
 data = parent_file / "data"
-
 prodata_directory = data / "processed"   # path to folder containing miniseed files (H)
-
 resp_directory = data / "stationxml"     # path to folder containing xml files (H)
-
-evt_info_directory = data / "EVENT_INFO" / "catalog_saintes.ml"  # path to pkl of QUAKEML file (H)
+evt_info_directory = data / "EVENT_INFO" / "catalog_drake_passage.ml"  # path to pkl of QUAKEML file (H)
 
 
 # Location of the figures directoy (where images will be stored) (H)
-
 movie_directory = parent_file / "test_animations" / str("figure_" + event_name) / "png_images"
 
 # Path to images (logo and map background)
-
 images = parent_file / "images"
-
 logo_loc = images / "LogoMaciv.png" # path to logo
-
-map_loc = images / "light__FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+map_loc = images / "light_FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
 map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
-
-# map_files = "/Users/user/Desktop/map_files" # obsolete, for GMV_plot_MACIV_pygmt (H)
 
 
 # Waveform setting
 # Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
 start       = 0  # min: 0    # default: 500
-end         = 900 # max: 7200 # default: 7000 
-decimate_fc = 2   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
+end         = 7200 # max: 7200 # default: 7000 
+decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
 
 # Movie setting
 # Choose movie interval (default: 1s)
 # plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
 
-timeframes      = range(0, 900, 10)    # init range(0, 3600, 30) (H)
-timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
+timeframes      = range(0, 7200, 10)    # init range(0, 3600, 30) (H)
+timelabel       = "min"                 # "s"/"min"/"hr" for seismograms
 fps             = 10                    # frame per second parameter for movie creation (H)
 
 # Data process parameters (H)
-filer_type = "bandpass" # filter type
+filer_type = "lowpass" # filter type
 
 f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
 f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
 f = 1   # cutoff frequency, default None (if low/high pass)
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
-station = "2025-09-18T20-19-20.7M.S062" # "FR.SALF." 
+station = "S062"
 
 # Select phases to plot on seismograms
 model  = "iasp91" # background model (e.g. iasp91/ak135)
@@ -103,6 +92,7 @@ save_dpi    = 120   # Saved figure resolution (Default: 120)
 # Parameters for GMV
 vmin = -0.1   # colorbar min, default: -0.1
 vmax =  0.1   # colorbar max, default: 0.1
+scale = 0.15  # lateral motion amplification factor (default : 0.65)
 
 ##################################################################################################
 
@@ -146,7 +136,7 @@ interval = int(stream_info["sample_rate"])
 
 GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
          vmin, vmax, arr_img, movie_directory, map_loc=map_loc, map_region=map_region,
-         timeframes=timeframes, timelabel=timelabel, scale=0.65,
+         timeframes=timeframes, timelabel=timelabel, scale=scale,
          save_option=save_option, save_dpi=save_dpi, plot_save=True,
          plot_local=plot_local, plot_3c=plot_3c, plot_rotate=plot_rotate)
 

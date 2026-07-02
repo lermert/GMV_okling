@@ -1,11 +1,15 @@
-All codes are based on the work :
-On Ki Angel Ling, Simon C. Stähler, Domenico Giardini, the AlpArray Working Group; Visualizing Global Seismic Phases with AlpArray. Seismological Research Letters 2021; 92 (6): 3845–3855. doi: https://doi.org/10.1785/0220210046
+All codes are based on the work of :
+```
+On Ki Angel Ling, Simon C. Stähler, Domenico Giardini, the AlpArray Working Group; Visualizing Global Seismic Phases with AlpArray. Seismological Research Letters 2021; 92 (6): 3845–3855. doi: https://doi.org/10.1785/0220210046`
+```
 
 
 
 # GMV_MACIV
 
 Python code for ground motion visualization for MACIV nodes.
+
+Note : lines ending by # (H) have been added or modified by Hazurya
 
 ## Brief Descriptions of All Features:
 
@@ -42,6 +46,20 @@ author(s) : Hazurya
 
 author(s) : Hazurya
 
+### FMC_map.py
+
+- program to create a map background of the French Massif Central using pygmt
+
+author(s) : Hazurya
+
+
+### environment.yml
+
+- yml file about the environnement in which the programs where run and tested
+
+author(s) : Hazurya
+
+
 ## Detailed description of all features
 
 ### Paths
@@ -50,7 +68,7 @@ The files paths should look like the following :
 
 (The file path scheme doesn't appear correctly on github with the preview mode, swap to code visulisation to have the right display)
 
-'''text
+```text
 parent_file/ (no particular name)
 │
 ├── data/
@@ -71,7 +89,7 @@ parent_file/ (no particular name)
     ├── GMV.py
     ├── GMV_utils.py
     └── GMV_complt_func.py
-'''
+```
 
 **IMPORTANT** : The program DOES NOT remove the instrument response from the data
 
@@ -92,8 +110,8 @@ parent_file being the path to the folder (as a PurePath object) containing all s
 
 yyyy-mm-ddThh-mm-ss.7M.station_name.00.channel.D.mseed
 
-    - yyyy-mm-ddThh-mm-ss : time of the event
-    - channel as DPZ, DPE, DPN, DP1 or DP2
+   yyyy-mm-ddThh-mm-ss : time of the event
+   channel as DPZ, DPE, DPN, DP1 or DP2
 
 ex : 2025-09-18T12-34-08.7M.C055.00.DPE.D.mseed
 
@@ -167,6 +185,7 @@ WILL BE CREATED IF DOES NOT EXIST
 
 - vmin - colorbar min, default: -0.1
 - vmax - colorbar max, default: 0.1
+- scale - lateral motion amplification factor (default : 0.65)
 
 
 ### GMV_utils.py
@@ -236,7 +255,7 @@ final function of GMV.py, plots all the data to create the animation
 
 **may be used in an independant python file to create the video**
 
-- map_maciv - creates a map of the French Massif Central, used to work with GMV_plot_MACIV_pygmt (*never came to fruition*)
+- map_maciv - create a map of the French Massif Central, used to work with GMV_plot_MACIV_pygmt (*never came to fruition*)
 
 
-- middle_station - finds the closest station to the middle of the map (Note : read only mseed file with station's name ending by "DPZ.D.mseed")
+- middle_station - find the closest station to the middle of the map (Note : read only mseed file with station's name ending by "DPZ.D.mseed")

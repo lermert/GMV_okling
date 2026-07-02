@@ -32,7 +32,7 @@ def readevent(event_name, evt_info_directory, enter_info_by_hand = False):
     Read QUAKEML or pkl downloaded via obspyDMT
     
     :param event_name: 
-    :param data_directory:
+    :param evt_info_directory: path to the quakeml file or pkl file
     :param enter_info_by_hand: if info is entered manually (in that case, enter information directly in the function)
     :return: event dictionary
     """
@@ -390,7 +390,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
         # Array list
         arraydic = {}
         arraydic["net_sta"]  = fsp[0]
-        arraydic["name_sta"] = fsp[0]+"."+fsp[1]+"."+fsp[2]
+        arraydic["name_sta"] = fsp[2] # (H)
         arraydic["lat_sta"]  = lat
         arraydic["lon_sta"]  = lon
         arraydic["elv_sta"]  = elv
@@ -527,7 +527,7 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
     # normalize each trace by max, abs value and store in matrix
     print ('Normalizing traces by the max, abs value...')
     for i, (tr1, tr2, tr3, bazi) in enumerate(zip(st, st_N, st_E, bazi_sta)):
-        # Rotate DPN/DPE to Radial/Transverse before normalizing (HH -> DP (H))
+        # Rotate DPN/DPE to Radial/Transverse before normalizing (H)
         if tr1.stats.station != tr2.stats.station or tr1.stats.station != tr3.stats.station or tr2.stats.station != tr3.stats.station:
             print(tr1)
             print("Not the same station")
