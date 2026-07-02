@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__author__ = "Angel Ling"
+__author__ = "Angel Ling, revisited by Hazurya in 06-07 2026"
 
 import obspy
 import pickle
@@ -11,26 +11,8 @@ from obspy.geodetics import kilometers2degrees     # distance in degree
 from obspy.geodetics.flinnengdahl import FlinnEngdahl
 from obspy.signal.rotate import rotate_ne_rt
 from obspy.taup import TauPyModel
-from matplotlib.cbook import simple_linear_interpolation
 from operator import itemgetter
-from obspy.signal.array_analysis import array_processing
 
-# ==================================
-# %% General variables and functions
-
-KM_PER_DEG = 111.1949
-# cmap_fk    = plt.cm.get_cmap('hot_r') # color map for GMV # commented by (H)
-
-# Set up domain 
-global AA_lat1, AA_lat2, AA_lon1, AA_lon2, box, dlat, dlon
-AA_lat1 = 40. # starting latitude  40N
-AA_lat2 = 52. # ending latitude    52N
-AA_lon1 = -12.  # starting longitude 0E
-AA_lon2 = 10. # ending longitude   22E
-# Create grids on map
-box = 4 # number of boxes on each side
-dlat = (AA_lat2-AA_lat1)/box
-dlon = (AA_lon2-AA_lon1)/box
 
 def maxabs(x):
     return max(abs(x))
@@ -45,21 +27,20 @@ def antipode(lat, lon):
     return lat, lon
 
 
-def readevent(event_name, evt_info_directory, local=False):
+def readevent(event_name, evt_info_directory, enter_info_by_hand = False):
     """
     Read QUAKEML or pkl downloaded via obspyDMT
     
     :param event_name: 
     :param data_directory:
-    :param local: plot local event
+    :param enter_info_by_hand: if info is entered manually (in that case, enter information directly in the function)
     :return: event dictionary
     """
     print("Reading event "+event_name+"...")
     print("Reading event catalog "+event_name+"...")
     event_dic = {}
-    if not local:
+    if not enter_info_by_hand:
         try: # QUAKEML
-#            cat = obspy.read_events(data_directory+"EVENT-INFO/catalog.ml", format="QUAKEML") # (H)
             cat = obspy.read_events(evt_info_directory, format="QUAKEML") # (H)
             ev  = cat[0]
             origin    = ev.preferred_origin()
@@ -103,8 +84,8 @@ def readevent(event_name, evt_info_directory, local=False):
             mag_type  = ev_pkl.get("magnitude_type")
             mag_event = ev_pkl.get("magnitude")
     
-    # Enter local event info by hand
-    elif local:
+    # Enter event info by hand
+    elif enter_info_by_hand:
         lat_event = 17.257
         lon_event = -61.327
         dep_event = 10.0
@@ -156,7 +137,7 @@ def filter_streams(st, f1, f2, f=None, ftype="bandpass"):
     :param st: stream
     :param f1: lower frequency
     :param f2: higher frequency
-    :param f: frequency for lowpass/highpass
+    :param f: frequency for lowpass/highpass, default: None
     :param ftype: filter type, default: "bandpass"
     :return: filtered stream
     """
@@ -169,7 +150,6 @@ def filter_streams(st, f1, f2, f=None, ftype="bandpass"):
     else:
         st.filter(ftype, freq=f, corners=4, zerophase=True)
     st_filtered.detrend('linear') # detrend after filtering
-    # st_filtered.decimate(2) # downsample the stream
     
     return st_filtered
 
@@ -213,7 +193,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
     print ('Reading trace from '+str(tstart)+' to '+str(tend)+'s from the origin time...')
     
     for file in sorted(listdir(prodata_directory)):
-        if file.endswith('DPZ.D.mseed'): # 'initially HHZ (H) -> com à changer en dessous si fonctionne choisi les traces verticales (17/06)
+        if file.endswith('DPZ.D.mseed'): # (H)
             fsp = file.split(".")
             try:
                 # DPZ (H)
@@ -234,12 +214,6 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             dist, azi, bazi = gps2dist_azimuth(lat_event, lon_event, lat, lon)
             dist_deg        = kilometers2degrees(dist/1000.)
                 
-            # Ignore stations outside the plotting region # commented by (H)
-#            if lat < AA_lat1-0.1 or lat > AA_lat2+0.1:
-#                continue
-#            if lon < AA_lon1-0.1 or lon > AA_lon2+0.1:
-#                continue
-            
             tr11[0].stats.distance       = dist_deg
             tr11[0].stats.backazimuth    = bazi
             tr11[0].stats["coordinates"] = {}
@@ -327,7 +301,7 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
             elif tr22[0].stats.channel == "DP1" and tr33[0].stats.channel == "DP2": # (H)
                 trZ12 = tr11+tr22+tr33
                 try:
-                    invZNE = obspy.read_inventory(resp_directory+'STXML.'+fsp[0]+"."+fsp[1]+"."+fsp[2]+"*") # how to adapt this line for the nodes ? (H)
+                    invZNE = obspy.read_inventory(resp_directory+'STXML.'+fsp[0]+"."+fsp[1]+"."+fsp[2]+"*")
                     trZNE  = trZ12.copy()._rotate_to_zne(invZNE, components=('Z12'))   # rotate to ZNE
                 except Exception:
                     continue
@@ -412,9 +386,6 @@ def read_data_inventory(prodata_directory, resp_directory, event_dic, tstart=0, 
         else:
             continue
 
-        # Remove stations below 41N and beyond 52N # commented by (H)
-#        if lat <= 41. or lat > 52.:
-#            continue
             
         # Array list
         arraydic = {}
@@ -517,11 +488,10 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
         endtime   = obspy.UTCDateTime(time_event_sec + end)
     
     # Filter and downsample streams
-#    print ('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1)) commented by (H)
+    print ('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1))
     st_all_raw = st1+st2+st3
-#    st_all_f   = filter_streams(st_all_raw, f1, f2) # commented by (H)
 
-    st_all_f = filter_streams(st_all_raw, f1, f2, f=f, ftype=ftype) # filter data and apply lowpass filter at 1 Hz (H)
+    st_all_f = filter_streams(st_all_raw, f1, f2, f=f, ftype=ftype)
 
     
     print ('Trimming traces from '+str(start)+'s to '+str(end)+'s...')
@@ -549,10 +519,10 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
     for ttr in st:
         print(ttr.stats.sampling_rate, end="Hz, ")
     
-    timestep    = st[0].stats.delta # Sample distance in seconds (timestep)
-    nt          = st[0].stats.npts  # Total number of samples
+    timestep    = st[0].stats.delta         # Sample distance in seconds (timestep)
+    nt          = st[0].stats.npts          # Total number of samples
     sample_rate = st[0].stats.sampling_rate # Sampling rate in Hz
-    time_st     = st[0].times()     # stream time
+    time_st     = st[0].times()             # stream time
     
     # normalize each trace by max, abs value and store in matrix
     print ('Normalizing traces by the max, abs value...')

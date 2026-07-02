@@ -1,5 +1,4 @@
-from obspy import read, Stream, UTCDateTime, read_inventory
-from obspy.clients.fdsn import Client
+from obspy import read, Stream, read_inventory
 import os
 import numpy as np 
 import pygmt
@@ -22,12 +21,12 @@ from obspy.geodetics import gps2dist_azimuth
 
 
 
-def extract_to_mutliple_mseed(data_directory, event_time, saving_directory):
-    """creates one mseed file per trace from one mseed file
+def extract_to_mutliple_mseed(data_directory, saving_directory, event_time):
+    """If data is stored in one mseed file, creates several mseed files, each one corresponding to one trace
 
     :param data_directory: path to the folder containing the mseed file
-    :param event_time: yyyy-mm-ddThh-mm-ss ex: 2025-09-18T12-34-08
     :param saving_directory: path to the folder where mseed files will be saved
+    :param event_time: yyyy-mm-ddThh-mm-ss ex: 2025-09-18T12-34-08
     """
 
     st = read(data_directory)
@@ -38,10 +37,14 @@ def extract_to_mutliple_mseed(data_directory, event_time, saving_directory):
         print(name, "saved")
 
 
+def extract_to_one_mseed(k, data_directory, event_time):
+    """"
+    If data is stored in several mseed files (one per trace) in a folder, extract k stations from those mseed files and create one mseed file with all the data
+    :param k: number of extracted stations
+    :param data_directory: path to the folder containing mseed files
+    :param event_time: yyyy-mm-ddThh-mm-ss ex: 2025-09-18T12-34-08
+    """
 
-
-def extract_to_one_mseed(k, data_directory):
-    "extracts k stations from one mseed files and creates an mseed file with those traces (if data are in several mseed files, one per trace)"
     files = os.listdir(data_directory)
     st = Stream()
 
@@ -53,7 +56,7 @@ def extract_to_one_mseed(k, data_directory):
         for i in range(3*k):
             st += read(data_directory + files[i])
     print(st)
-    st.write(f"2025-10-10T20-29-20_{len(st)//3}_stations.mseed", format='MSEED')
+    st.write(f"{event_time}_{len(st)//3}_stations.mseed", format='MSEED')
     return st
 
 # use a png as a map
@@ -76,6 +79,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
     :param movie_directory: movie directory path
     :param map_loc: map directory path # (H)
     :param map_region: delimited region by the map # (H)
+    :param scale: lateral displacement amplification factor # (H)
     :param plot_save: If True, save figure
     :param plot_local: If True, plot local event
     :param plot_3c: If True, plot in 3 component on GMV
@@ -91,10 +95,16 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
     lon_sta_new  = GMV["lon_sta"]
     name_sta_new = GMV["name_sta"]
 
+    standard_parallels = (43, 49) # (H)
+
     # defines the projection for furure plotting (H)
     proj = ccrs.LambertConformal(central_longitude =(map_region[0]+map_region[1])/2,
                                 central_latitude =(map_region[2]+map_region[3])/2,
-                                standard_parallels = (43, 49) ) #(H)
+                                standard_parallels = standard_parallels ) #(H)
+    
+    print(f"Using standard parallel {standard_parallels} for the map's projection...")
+    
+
     # reads the map image (H)
     img = mpimg.imread(map_loc) # (H)
 
@@ -138,8 +148,8 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         fig = plt.figure(figsize=(10, 8.5)) 
         gs=GridSpec(5,1, height_ratios=[4,0.05,0.55,0.55,0.55])
         gs.update(hspace=0.1)
-        ax1 = plt.subplot(gs[0], projection=proj) # adds the projection type of the subplot # (H)
-        ax1.set_axis_off() # removes the frame of the subplot (H)
+        ax1 = plt.subplot(gs[0], projection=proj)   # add the projection type of the subplot # (H)
+        ax1.set_axis_off()                          # remove the frame of the subplot (H)
         axs = plt.subplot(gs[1])
         axs.set_visible(False)
         ax2 = plt.subplot(gs[2])
@@ -171,7 +181,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         
         if plot_local: # Plot local epicenter
             x_eq, y_eq = event_dic["lon"], event_dic["lat"]
-            alpmap_eq = ax3.plot(x_eq, y_eq, c="yellow", markeredgecolor="k", markeredgewidth=1.5, marker="*", markersize=15, zorder=4, ax=ax1)
+            alpmap_eq = ax1.plot(x_eq, y_eq, c="yellow", markeredgecolor="k", markeredgewidth=1.5, marker="*", markersize=15, zorder=4, transform=ccrs.PlateCarree())
         
         # creates a new axis for the colorbar (H)
         cax = inset_axes(ax1, width="5%", height="90%", loc='center left', bbox_to_anchor=(1.04, 0, 1, 1), bbox_transform=ax1.transAxes, borderpad=0) # bbox_to_anchor = [left, bottom, width, height]
@@ -200,13 +210,13 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         ax1.add_artist(ab)
         
         # Plot reference seismograms
-        # DPZ # initially HHZ (H)
+        # DPZ
         ax2.plot( (time_st+start)/d_time, GMV["GMV_Z"][thechosenone["sta_index"]], color="k", linewidth=0.8, label=thechosenone["sta_name"]+".Z") # linewidth=1.5 (H)
         ax2.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         # Plot phase marker for channel Z
         phase_marker(thechosenone["arr"], ax2, "Z", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         
-        ax2.grid(which='major') # initially ax2.grid(b=True, which='major') but raised an error (H)
+        ax2.grid(which='major') # (H)
         ax2.set_xlim([start/d_time,end/d_time])
         ax2.set_ylim([-1.1,1.1]) 
         ax2.set_xticks(seismo_labels)
@@ -216,13 +226,13 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         # DPN/R
         if plot_rotate:
             ax3.plot((time_st+start)/d_time, GMV["GMV_R"][thechosenone["sta_index"]], color="k", linewidth=0.8, label=thechosenone["sta_name"]+".R") # linewidth=1.5 (H)
-#            phase_marker(thechosenone["arr"], ax3, "R", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
+            phase_marker(thechosenone["arr"], ax3, "R", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         else:    
             ax3.plot((time_st+start)/d_time, GMV["GMV_N"][thechosenone["sta_index"]], color="k", linewidth=0.8, label=thechosenone["sta_name"]+".N") # linewidth=1.5 (H)
             phase_marker(thechosenone["arr"], ax3, "N", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         ax3.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
-        ax3.grid(which='major')  # initially ax3.grid(b=True, which='major') but raised an error (H)
+        ax3.grid(which='major') # (H)
         ax3.set_xlim([start/d_time,end/d_time])
         ax3.set_ylim([-1.1,1.1]) 
         ax3.set_xticks(seismo_labels)
@@ -239,7 +249,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
             phase_marker(thechosenone["arr"], ax4, "E", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         ax4.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
-        ax4.grid(which='major') # ax4.grid(b=True, which='major') (H)
+        ax4.grid(which='major') # (H)
         ax4.tick_params(axis="x",labelsize=12)
         if timelabel == "hr":
             ax4.set_xlabel('Time after origin [hr]', fontsize=14)
@@ -284,13 +294,13 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
              plot_local=False, plot_3c=True, plot_rotate=True):
     
     """
+    An attempt to adapt the function using only pygmt prototype never completed # (H)
     Plot single timestep of GMV and reference seismograms 
     
     :param GMV: processed data dictionary
     :param event_dic: event dictionary
     :param stream_info: stream info dictionary
     :param thechosenone: the reference station info dictionary
-    :param start_movie: starting time of the movie (in s) # removed , by laura
     :param end_movie: ending time of the movie (in s)
     :param interval: movie interval (index)
     :param vmin: colorbar min
@@ -356,6 +366,7 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
 
         
     step = 0 # used only when plot_local is True
+
     ############################################################ BEGINNING OF THE LOOP
     for it in timeframes: # from start time to end time 
         if (start+it*timestep) % 500 == 0:
@@ -367,7 +378,6 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
 
         pygmt.makecpt(cmap="SCM/vik", series=[vmin, vmax]) # colormap (H)
 
-   
         # Plot the stations
         # Plot 3C motion
         if plot_3c:
@@ -378,15 +388,13 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
             x_sta, y_sta = lon_sta_new+(GMV["GMV_E"][:,it]*scale), lat_sta_new+(GMV["GMV_N"][:,it]*scale)
             alpmap = map.plot(x=x_sta, y= y_sta, style= "c0.3c", fill=GMV["GMV_Z"][:,it], cmap=True, pen="black")
 
-
         # Plot vertical motion only
         else:
             x_sta, y_sta = lon_sta_new, lat_sta_new
             alpmap = map.plot(x=x_sta,y= y_sta,  style= "c0.3c", fill=GMV["GMV_Z"][:,it], cmap=True, pen="black") # not tested (H)
         # Plot reference station (Plotting it again to avoid being covered by other dots)
         alpmap_n1= map.plot(x=x_sta[thechosenone["sta_index"]], y=y_sta[thechosenone["sta_index"]], style = "c0.3c", fill='red', cmap=True, pen="0.3p,red")
-        
-        
+            
         if plot_local: # Plot local epicenter
             x_eq, y_eq = event_dic["lon"], event_dic["lat"]
             alpmap_eq = map.plot(x_eq, y_eq, c="yellow", style= "c0.3c")
@@ -405,7 +413,7 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
                 map.savefig(movie_directory+ event_dic['event_name'] +"_"+ "%07.1f"%(step)+"s."+save_option, dpi=save_dpi)
         
             del map # delete the figure to avoid overloading memory          
-            
+
     if plot_save:
         print("Plots are saved. End of plotting.")
     else:
@@ -423,7 +431,7 @@ def generate_video(image_folder, video_name, fps = 15):
     height, width, layers = frame.shape
 
     # Video writer to create .avi file
-    video = cv2.VideoWriter(video_name + ".avi", cv2.VideoWriter_fourcc(*'DIVX'), fps, (width, height))
+    video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'DIVX'), fps, (width, height))
 
     # Appending images to video
     for image in images:
@@ -437,6 +445,9 @@ def generate_video(image_folder, video_name, fps = 15):
 def map_maciv(McF, volc, Fault1, Fault2, topo_grid):
     """
     Creates a map of the Macif central with pygmt
+    function for GMV_plot_MACIV_pygmt, in an attempt to only use pygmt, never completed # (H)
+
+    McF, volc, Fault1, Fault2, topo_grid are kml files opened in GMV_plot_MACIV_pygmt
 
     :return: map as a pygmt object
     """

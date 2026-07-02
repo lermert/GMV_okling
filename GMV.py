@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
-__author__ = "Angel Ling"
+__author__ = "Angel Ling, revisited by Hazurya in 06-07/2026"
 
 import warnings
 warnings.filterwarnings('ignore') 
 import time
-from os import path, listdir, makedirs
+from os import path, makedirs
 import matplotlib.pyplot as plt
 from matplotlib.cbook import get_sample_data
-from operator import itemgetter
 from GMV_utils import readevent, read_data_inventory, normalize, station_phases
 from GMV_complt_func import GMV_plot_MACIV, generate_video # (H)
 from pathlib import Path # (H)
 
 
-parent_file = Path(__file__).resolve().parent.parent # parent_file = WindowsPath('C:/Users/sommi/Desktop/stage_ISTerre/animations')
+parent_file = Path(__file__).resolve().parent.parent
 
 ############# PARAMETERS ##############################################################
 
@@ -24,7 +23,7 @@ prog_starttime = time.time() # Execution time of this program
 event_name = "saintes_earthquake"
 
 # local event or not?
-plot_local = False # init True (H)
+plot_local = True
 
 # plot 3 components for seismogram?
 plot_3c = True # init True (H)
@@ -58,18 +57,17 @@ images = parent_file / "images"
 
 logo_loc = images / "LogoMaciv.png" # path to logo
 
-map_loc = images / "light_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+map_loc = images / "light__FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
 map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
 
-
-# map_files = "/Users/sommi/Desktop/stage_ISTerre/animations/GMV_okling/map_files" # obsolete (H)
+# map_files = "/Users/user/Desktop/map_files" # obsolete, for GMV_plot_MACIV_pygmt (H)
 
 
 # Waveform setting
 # Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
 start       = 0  # min: 0    # default: 500
 end         = 900 # max: 7200 # default: 7000 
-decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
+decimate_fc = 2   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
 
 # Movie setting
 # Choose movie interval (default: 1s)
@@ -87,7 +85,7 @@ f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
 f = 1   # cutoff frequency, default None (if low/high pass)
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
-station = "2025-10-10T20-19-20.7M.S062" # "FR.SALF." 
+station = "2025-09-18T20-19-20.7M.S062" # "FR.SALF." 
 
 # Select phases to plot on seismograms
 model  = "iasp91" # background model (e.g. iasp91/ak135)
@@ -117,9 +115,8 @@ else:
     print("Movie directory "+ str(movie_directory) + " exists.")
 
 ## Read event catalog (Read QUAKEML or pkl)
-event_dic = readevent(event_name, evt_info_directory, local=plot_local)
+event_dic = readevent(event_name, evt_info_directory)
 
-# ==================== 
 # %% Read data and inventory
 
 ## Read processed data and inventories
@@ -158,10 +155,11 @@ if create_video :
     try:
         print(movie_directory)
         print(movie_directory.parent / outfile)
-        generate_video(movie_directory, movie_directory.parent, fps=fps)
+        generate_video(movie_directory, movie_directory.parent / outfile, fps=fps)
 
-    except Exception :
-        print("Video could not be generated, try to use function generate_video in an independant program to compile png files")
+    except Exception as e :
+        print(e)
+        print("Video could not be generated, try to use function generate_video in an independant program to compile images")
         
 
     
