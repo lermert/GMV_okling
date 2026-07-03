@@ -66,8 +66,6 @@ author(s) : Hazurya
 
 The files paths should look like the following :
 
-(The file path scheme doesn't appear correctly on github with the preview mode, swap to code visulisation to have the right display)
-
 ```text
 parent_file/ (no particular name)
 │
