@@ -1,0 +1,9 @@
+# Fichiers de brouillon
+draft.py
+data_Nice.py
+
+# Dossiers générés par Python
+__pycache__/
+
+# Paramètres locaux de l'éditeur VSCode
+.vscode/
