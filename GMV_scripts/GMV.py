@@ -15,12 +15,12 @@ from pathlib import Path # (H)
 
 parent_file = Path(__file__).resolve().parent.parent
 
-############# PARAMETERS ##############################################################
+############# SETTINGS ##############################################################
 
 prog_starttime = time.time() # Execution time of this program
 
 ## Event name (Folder name)
-event_name = "drake_passage_earthquake"
+event_name = "event_name"
 
 # local event or not?
 plot_local = False
@@ -33,41 +33,39 @@ plot_rotate = True
 
 # Create video or not ? (H)
 create_video = True
-outfile = "drake_passage_earthquake.avi" # has to end by .avi
+outfile = f"{event_name}.avi" # has to end by .avi
 
 # Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
-data = parent_file / "data"
-prodata_directory = data / "processed"   # path to folder containing miniseed files (H)
-resp_directory = data / "stationxml"     # path to folder containing xml files (H)
-evt_info_directory = data / "EVENT_INFO" / "catalog_drake_passage.ml"  # path to pkl of QUAKEML file (H)
+prodata_directory = parent_file / "data" / "processed"   # path to folder containing miniseed files (H)
+resp_directory = parent_file / "data" / "stationxml"     # path to folder containing xml files (H)
+evt_info_directory = parent_file / "data" / "EVENT_INFO" / "catalog.ml"  # path to pkl of QUAKEML file (H)
 
 
 # Location of the figures directoy (where images will be stored) (H)
 movie_directory = parent_file / "test_animations" / str("figure_" + event_name) / "png_images"
 
 # Path to images (logo and map background)
-images = parent_file / "images"
-logo_loc = images / "LogoMaciv.png" # path to logo
-map_loc = images / "light_FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+logo_loc = parent_file / "images" / "logo_example.png" # path to logo
+map_loc = parent_file / "images" / "background_example.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
 map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
 
 
 # Waveform setting
 # Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
 start       = 0  # min: 0    # default: 500
-end         = 7200 # max: 7200 # default: 7000 
+end         = 3600 # max: 7200 # default: 7000 
 decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
 
 # Movie setting
 # Choose movie interval (default: 1s)
 # plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
 
-timeframes      = range(0, 7200, 10)    # init range(0, 3600, 30) (H)
-timelabel       = "min"                 # "s"/"min"/"hr" for seismograms
+timeframes      = range(0, end, 20)    # init range(0, 3600, 30) (H)
+timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
 fps             = 10                    # frame per second parameter for movie creation (H)
 
 # Data process parameters (H)
-filer_type = "lowpass" # filter type
+filer_type = "bandpass" # filter type
 
 f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
 f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
@@ -113,8 +111,7 @@ event_dic = readevent(event_name, evt_info_directory)
 data_dic = read_data_inventory(prodata_directory, resp_directory, event_dic, plot_3c=plot_3c, tend=end)
 
 
-# ==================== 
-# %% normalize displacement and store good data
+# ==================== # %% normalize displacement and store good data
 
 # Filter and normalize one single event
 GMV, stream_info = normalize(data_dic, event_dic, f1, f2, start, end, ftype=filer_type, f=f, decimate_fc=decimate_fc, threshold=None)

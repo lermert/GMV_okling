@@ -16,9 +16,9 @@ Several tries might be necessay to find the right client where the event's infor
 
 """
 
-event_time = "2025-09-18T12:34:08.937068"
-magnitude = 3.58
-file_name = "catalog_saintes.ml"
+event_time = "2025-10-10T17-22-01" # 2025-10-10T17-22-01 (Nice)
+magnitude = 3.2
+file_name = "catalog_nice.ml"
 
 client = Client("EPOSFR")
 t = UTCDateTime(event_time) # time of the event
@@ -26,4 +26,4 @@ catalog = client.get_events(starttime=t-100, endtime=t+3*3600, minmagnitude=magn
 
 print(catalog)
 
-# file = catalog[1].write(file_name, format="QUAKEML")
+file = catalog[1].write(file_name, format="QUAKEML")

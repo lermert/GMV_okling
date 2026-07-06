@@ -156,10 +156,10 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         ax3 = plt.subplot(gs[3])
         ax4 = plt.subplot(gs[4])
 
-        # prepares the place for the map in the subplot (H)
+        # prepare the place for the map in the subplot (H)
         ax1.set_extent(map_region, crs=ccrs.PlateCarree())
         
-        # places the map in the subplot (H)
+        # place the map in the subplot (H)
         ax1.imshow(img, origin='upper', extent=map_region, transform=ccrs.PlateCarree())
 
         
@@ -305,7 +305,7 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
     :param interval: movie interval (index)
     :param vmin: colorbar min
     :param vmax: colorbar max
-    :param arr_img: AlpArray logo
+    :param arr_img: logo
     :param movie_directory: movie directory path
     :param plot_save: If True, save figure
     :param plot_local: If True, plot local event

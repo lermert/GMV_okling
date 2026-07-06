@@ -16,10 +16,11 @@ vmax =  0.1   # colorbar max, default: 0.1
 
 map_region = [1.8, 4.2, 44.8, 46.5] # [lon min, lon max, lat min, lat max] (light_map_background.png)
 
+standard_parallels = (43, 49)
 
 proj = ccrs.LambertConformal(central_longitude =(map_region[0]+map_region[1])/2,
                              central_latitude =(map_region[2]+map_region[3])/2, 
-                             standard_parallels = (43, 49))
+                             standard_parallels = standard_parallels)
 
 
 gs=GridSpec(5,1, height_ratios=[4,0.05,0.55,0.55,0.55])
@@ -33,8 +34,8 @@ ax4 = plt.subplot(gs[4])
 
 
 images = parent_file / "images"
-logo_loc = images / "LogoMaciv.png" # path to logo
-map_loc = images / "light_map_background.png" # path to map background
+logo_loc = images / "logo_example.png" # path to logo
+map_loc = images / "background_example.png" # path to map background
 
 
 img = mpimg.imread(map_loc)

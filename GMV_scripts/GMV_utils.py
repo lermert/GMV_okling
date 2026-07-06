@@ -538,7 +538,7 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
             print(tr2)
             print(tr3)
             continue
-        print(tr4.shape, tr5.shape)
+#        print(tr4.shape, tr5.shape) commented by (H)
         if plot_Xsec:
             tr1_new = tr1.data/max(maxabs(tr1.data),maxabs(tr2.data),maxabs(tr3.data))
             tr2_new = tr2.data/max(maxabs(tr2.data),maxabs(tr3.data))
@@ -586,6 +586,8 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
         else:
             threshold = 0.3  # default: 0.3
     goodstations = ((tr1_std <= threshold) & (tr2_std <= threshold) & (tr3_std <= threshold)) # Store good stations
+
+    print(len(tr1_std) - len(goodstations), "station(s) removed")
     
     # Store good stations
     normalized_dic = {}

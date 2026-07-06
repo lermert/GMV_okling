@@ -1,4 +1,4 @@
-All codes are based on the work of :
+Code are based on the work of :
 ```
 On Ki Angel Ling, Simon C. Stähler, Domenico Giardini, the AlpArray Working Group; Visualizing Global Seismic Phases with AlpArray. Seismological Research Letters 2021; 92 (6): 3845–3855. doi: https://doi.org/10.1785/0220210046`
 ```
@@ -10,6 +10,78 @@ On Ki Angel Ling, Simon C. Stähler, Domenico Giardini, the AlpArray Working Gro
 Python code for ground motion visualization for MACIV nodes.
 
 Note : lines ending by # (H) have been added or modified by Hazurya
+
+Plan :
+
+- Where to start ?
+- Brief Descriptions of All Features
+- Detailed description of all features
+- Suggestions for improvement
+- Examples of parameters selected for visualizing the Drake Passage earthquake 25/10/10-20:19:20
+
+
+
+## Where to start ?
+
+#### I_ Place the files correctly
+
+1) Put the mseed files in the data/processed folder.
+There should be one file per trace, and their names must follow this structure: :
+
+yyyy-mm-ddThh-mm-ss.7M.station_name.00.channel.D.mseed
+
+   yyyy-mm-ddThh-mm-ss : time of the event
+   channel as DPZ, DPE, DPN, DP1 or DP2
+
+ex : 2025-09-18T12-34-08.7M.C055.00.DPE.D.mseed
+
+To do this, you can use the “extract_to_multiple_mseed” and “extract_to_one_mseed” functions (in the GMV_complt_func.py file; see below).
+
+
+2) Put the xml files in the data/stationxml folder.
+There should be one per station, and their name must follow this structure :
+
+7M.station_name.xml
+
+ex : 7M.C003.xml
+
+
+3) Put the .pkl or .ml file in the folder data/EVENT_INFO
+(if needed, info can also be entered manually, see "readevent" in "GMV.utils.py")
+
+In the end, your data should follow the file paths shown in the diagram below
+
+4) You can also put your background map and logo (as a png with a Plate Carree projection) in the folder "images".
+A map background and logo are provided as examples so you can skip this step at first try.
+
+#### II_ Change the most important parameters
+
+In the GMV.py file, when you try this for the first time, here are the most important settings to change:
+
+- *plot_local* - True/False depending on the event is local or not
+
+- check that :
+    *prodata_directory* points to "processed"
+    *resp_directory* points to "stationxml"
+    *evt_info_directory* points to your .ml or .pkl files
+
+
+- *map_region* - Specify the region in which the coordinates of your stations will be plotted, using a list in the format [minimum longitude, maximum longitude, minimum latitude, maximum latitude]
+
+- set the *start* and end *parameters* (starting and ending time in seconds)
+
+- *decimate* - how much your data is going to be downsampled
+
+- set the data process parameters :
+    *filer_type* - "bandpass"/"highpass"/"lowpass"
+    f1, f2 - cutoff frequences if filter_type = "bandpass"
+    f - cutoff frequency if filter_type = "highpass" or "lowpass"
+
+- station - choose a reference stations(indicate its name)
+
+The program should now be ready to run.
+
+For your next tests, you can also adjust other settings (described below).
 
 ## Brief Descriptions of All Features:
 
@@ -50,7 +122,7 @@ author(s) : Hazurya
 
 - program to create a map background of the French Massif Central using pygmt
 
-author(s) : Hazurya
+author(s) : Coralie A., revisited by Hazurya
 
 
 ### environment.yml
@@ -85,10 +157,12 @@ parent_file/ (no particular name)
 │   ├── map backgroung file (has to be a png and have a Plate carree projection)
 │   └── logo (png)
 │
-└── GMV_scripts/ (should contain all .py files)
-    ├── GMV.py
-    ├── GMV_utils.py
-    └── GMV_complt_func.py
+├── GMV_scripts/ (should contain all .py files)
+│   ├── GMV.py
+│   ├── GMV_utils.py
+│   └── GMV_complt_func.py
+│
+└── test_animations (this path will be created if does not exist, this where the images and video will be stored)
 ```
 
 **IMPORTANT** : The program DOES NOT remove the instrument response from the data
@@ -125,7 +199,8 @@ ex : 7M.C003.xml
 
 if not, see read_data_inventory in GMV_utils.py
 
-*** information about event also may be entered by hand in the function readevent in GMV_utils.py, if enter_info_by_hand is set to True
+*** information about event also may be entered by hand in the function readevent in GMV_utils.py, if enter_info_by_hand is set to True.
+Note : this version of the program has never been tested with a .pkl file, only with a .ml.
 
 
 ### GMV.py
@@ -137,6 +212,8 @@ Parameters that can be changed depending on the event :
 - plot_local - True/False depending on the event is local or not
 
 - plot_3c - True/False, if False, only the vertical motion will be shown
+
+- plot rotate - if true, then rotates from North/East to Radial/Transverse
 
 - create_video - True/False, if True, will try to create the video
 
@@ -178,6 +255,10 @@ WILL BE CREATED IF DOES NOT EXIST
 - f - cutoff frequencie for "lowpass"/"highpass" filter (don't need to be indicated if "bandpass")
 
 - station - name of the reference station -> can be found with the middle_station function in GMV_complt_func.py that finds the station the closest to the middle of the map
+
+- model - 1D velocity model to use for ray tracing
+
+- phases - phases to include in tracing
 
 - save_option - Save format
 
@@ -259,3 +340,110 @@ final function of GMV.py, plots all the data to create the animation
 
 
 - middle_station - find the closest station to the middle of the map (Note : read only mseed file with station's name ending by "DPZ.D.mseed")
+
+
+## Suggestions for improvement
+
+- make the file name structure more universal
+Currently, it is hard-coded in the "read_data_inventory" function in "GMV_utils.py".
+Enabling other kind of name structures could allow to plot more easily other types of stations.
+
+
+- in the function "normalize" in "GMV_utils.py", noisy stations are removed.
+("    # Remove traces with STD above a threshold # default: 0.3
+    if threshold:
+        threshold = threshold # set by hand
+    else:
+        if mag >= 7.0:
+            threshold = 0.25 # default: 0.25
+        else:
+            threshold = 0.3  # default: 0.3
+    goodstations = ((tr1_std <= threshold) & (tr2_std <= threshold) & (tr3_std <= threshold)) # Store good stations
+
+    print(len(tr1_std) - len(goodstations), "station(s) removed")", lines 580-590)
+
+    The parameter used to remove noisy stations could be adjusted.
+    The program only prints how many stations have been removed, not their names.
+
+## Examples of parameters selected for visualizing the Drake Passage earthquake 25/10/10-20:19:20
+
+```
+############# SETTINGS ##############################################################
+
+prog_starttime = time.time() # Execution time of this program
+
+## Event name (Folder name)
+event_name = "drake_passage_earthquake"
+
+# local event or not?
+plot_local = False
+
+# plot 3 components for seismogram?
+plot_3c = True
+
+# ENZ (plot_rotate=False) or RTZ (plot_rotate=True)?
+plot_rotate = True
+
+# Create video or not ? (H)
+create_video = True
+outfile = f"{event_name}.avi" # has to end by .avi
+
+# Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
+prodata_directory = parent_file / "data" / "processed"   # path to folder containing miniseed files (H)
+resp_directory = parent_file / "data" / "stationxml"     # path to folder containing xml files (H)
+evt_info_directory = parent_file / "data" / "EVENT_INFO" / "catalog_drake_passage.ml"  # path to pkl of QUAKEML file (H)
+
+
+# Location of the figures directoy (where images will be stored) (H)
+movie_directory = parent_file / "test_animations" / str("figure_" + event_name) / "png_images"
+
+# Path to images (logo and map background)
+logo_loc = parent_file / "images" / "LogoMaciv.png" # path to logo
+map_loc = parent_file / "images" / "light_FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
+
+
+# Waveform setting
+# Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
+start       = 0  # min: 0    # default: 500
+end         = 7200 # max: 7200 # default: 7000 
+decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
+
+# Movie setting
+# Choose movie interval (default: 1s)
+# plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
+
+timeframes      = range(0, end, 20)    # init range(0, 3600, 30) (H)
+timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
+fps             = 10                    # frame per second parameter for movie creation (H)
+
+# Data process parameters (H)
+filer_type = "lowpass" # filter type
+
+f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
+f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
+f = 1   # cutoff frequency, default None (if low/high pass)
+
+# Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
+station = "S062"
+
+# Select phases to plot on seismograms
+model  = "iasp91" # background model (e.g. iasp91/ak135)
+phases = ["P","S", "4kmps"]
+# local events: Pg, Sg, surface wave e.g. 3kmps
+# phases = ['P','PcP','PP','PPP','S','SS','SSS','SKS','4kmps','4.4kmps'] # Phases to plot on seismograms [Teleseismic events]
+# phases = ['P','Pdiff','PKP','PKIKP','PP','PPP','S','SS','SSS','SKS','SKKS','4kmps','4.4kmps'] # Phases to plot on seismograms [100deg<dist<120deg]
+# phases = ["P", "S", "p", "s"] #['Pdiff','PKP','PKiKP','PKIKP','PP','PPP','SS','SSS','SKS','SKKS','4kmps','4.4kmps','SKKKS','SKSP','PPPS','SSP']  # Phases to plot on seismograms [Core events]
+# phases = ['4kmps','4.4kmps']
+
+# Plotting parameters for movies
+save_option = "png" # Save format (Default: "png")
+save_dpi    = 120   # Saved figure resolution (Default: 120)
+
+# Parameters for GMV
+vmin = -0.1   # colorbar min, default: -0.1
+vmax =  0.1   # colorbar max, default: 0.1
+scale = 0.15  # lateral motion amplification factor (default : 0.65)
+
+##################################################################################################
+```
