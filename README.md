@@ -77,7 +77,7 @@ In the GMV.py file, when you try this for the first time, here are the most impo
     f1, f2 - cutoff frequences if filter_type = "bandpass"
     f - cutoff frequency if filter_type = "highpass" or "lowpass"
 
-- station - choose a reference stations(indicate its name)
+- station - choose a reference stations (indicate its name)
 
 The program should now be ready to run.
 
@@ -160,7 +160,7 @@ parent_file/ (no particular name)
 │   ├── GMV_utils.py
 │   └── GMV_complt_func.py
 │
-└── test_animations (this path will be created if does not exist, this where the images and video will be stored)
+└── test_animations (this path will be created if does not exist, this is where the images and video will be stored)
 ```
 
 **IMPORTANT** : The program DOES NOT remove the instrument response from the data
@@ -338,3 +338,96 @@ final function of GMV.py, plots all the data to create the animation
 
 
 - middle_station - find the closest station to the middle of the map (Note : read only mseed file with station's name ending by "DPZ.D.mseed")
+
+
+## Suggestions for improvement
+
+- enable more flexibility in the files' names so they don't necessarily have to follow the structure :
+    yyyy-mm-ddThh-mm-ss.7M.station_name.00.channel.D.mseed
+    7M.station_name.xml
+Those changes would have to be made in the "read_data_inventory" function in "GMV_utils.py"
+
+
+
+## Examples of parameters selected for visualizing the Drake Passage earthquake 25/10/10-20:19:20
+
+```
+############# SETTINGS ##############################################################
+
+prog_starttime = time.time() # Execution time of this program
+
+## Event name (Folder name)
+event_name = "drake_passage"
+
+# local event or not?
+plot_local = False
+
+# plot 3 components for seismogram?
+plot_3c = True
+
+# ENZ (plot_rotate=False) or RTZ (plot_rotate=True)?
+plot_rotate = True
+
+# Create video or not ? (H)
+create_video = True
+outfile = f"{event_name}.avi" # has to end by .avi
+
+# Location of the data directoy (miniseed, xml, pkl or QUAKEML files) (H)
+prodata_directory = parent_file / "data" / "processed"   # path to folder containing miniseed files (H)
+resp_directory = parent_file / "data" / "stationxml"     # path to folder containing xml files (H)
+evt_info_directory = parent_file / "data" / "EVENT_INFO" / "catalog_drake.ml"  # path to pkl of QUAKEML file (H)
+
+
+# Location of the figures directoy (where images will be stored) (H)
+movie_directory = parent_file / "test_animations" / str("figure_" + event_name) / "png_images"
+
+# Path to images (logo and map background)
+logo_loc = parent_file / "images" / "logo_maciv.png" # path to logo
+map_loc = parent_file / "images" / "light_FMC_map_background.png"   # path to map (has to be a png and the projection has to be Plate carree) (H)
+map_region = [1.8, 4.2, 44.8, 46.5]             # [lon min, lon max, lat min, lat max]
+
+
+# Waveform setting
+# Choose the starting and ending time in seconds after OT shown in reference seismograms (min: 0, max: 7200)
+start       = 0  # min: 0    # default: 500
+end         = 7200 # max: 7200 # default: 7000 
+decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to avoid data downsampling (H))
+
+# Movie setting
+# Choose movie interval (default: 1s)
+# plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
+
+timeframes      = range(0, end, 20)    # init range(0, 3600, 30) (H)
+timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
+fps             = 10                    # frame per second parameter for movie creation (H)
+
+# Data process parameters (H)
+filer_type = "lowpass" # filter type
+
+f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
+f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
+f = 1   # cutoff frequency, default None (if low/high pass)
+
+# Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
+station = "S062"
+
+# Select phases to plot on seismograms
+model  = "iasp91" # background model (e.g. iasp91/ak135)
+phases = ["P","S", "4kmps"]
+# local events: Pg, Sg, surface wave e.g. 3kmps
+# phases = ['P','PcP','PP','PPP','S','SS','SSS','SKS','4kmps','4.4kmps'] # Phases to plot on seismograms [Teleseismic events]
+# phases = ['P','Pdiff','PKP','PKIKP','PP','PPP','S','SS','SSS','SKS','SKKS','4kmps','4.4kmps'] # Phases to plot on seismograms [100deg<dist<120deg]
+# phases = ["P", "S", "p", "s"] #['Pdiff','PKP','PKiKP','PKIKP','PP','PPP','SS','SSS','SKS','SKKS','4kmps','4.4kmps','SKKKS','SKSP','PPPS','SSP']  # Phases to plot on seismograms [Core events]
+# phases = ['4kmps','4.4kmps']
+
+# Plotting parameters for movies
+save_option = "png" # Save format (Default: "png")
+save_dpi    = 120   # Saved figure resolution (Default: 120)
+
+# Parameters for GMV
+vmin = -0.1   # colorbar min, default: -0.1
+vmax =  0.1   # colorbar max, default: 0.1
+scale = 0.15  # lateral motion amplification factor (default : 0.65)
+
+##################################################################################################
+```
