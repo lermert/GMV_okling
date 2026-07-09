@@ -348,6 +348,12 @@ final function of GMV.py, plots all the data to create the animation
 Those changes would have to be made in the "read_data_inventory" function in "GMV_utils.py"
 
 
+- So far, in the "read_data_inventory" function in "GMV_utils.py", only the lines 196 ("if file.endswith('DPZ.D.mseed'): # (H)") to 335 ("continue") have been adapted for the nodes data. Those correspond to the channels DPZ, DPE, DPN, DP1 and DP2 (parts of the code corresponding to DP1 and DP2 have never been tested).
+Lines 338 ("elif file.endswith('CHZ'):") to 409 ("print ('Read ' + str(Z12_count)+ ' Z12 stations.')) have never been adapted.
+
+In conclusion, the "read_data_inventory" could be improved to make it cleaner and more convinient and universal.
+
+
 
 ## Examples of parameters selected for visualizing the Drake Passage earthquake 25/10/10-20:19:20
 
