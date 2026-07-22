@@ -11,7 +11,7 @@ from matplotlib.cbook import get_sample_data
 from GMV_utils import readevent, read_data_inventory, normalize, station_phases
 from GMV_complt_func import GMV_plot_MACIV, generate_video # (H)
 from pathlib import Path # (H)
-
+import numpy as np
 
 parent_file = Path(__file__).resolve().parent.parent
 
@@ -60,16 +60,16 @@ decimate_fc = 0   # Downsample data by an integer factor (Default: 2)   (0 to av
 # Choose movie interval (default: 1s)
 # plot only certain time frame in list or array, e.g.[1772,2220,2527] (Default: None)
 
-timeframes      = range(0, end, 20)    # init range(0, 3600, 30) (H)
+timeframes      = np.arange(0, end, 20.0)    # init range(0, 3600, 30) (H) can use fractions of second ! Does not have to start at zero or end at end
 timelabel       = "s"                 # "s"/"min"/"hr" for seismograms
 fps             = 10                    # frame per second parameter for movie creation (H)
 
 # Data process parameters (H)
 filer_type = "bandpass" # filter type
 
-f1 = 1  # min freq, default 1/200 = 0.005 (if bandpass)
-f2 = 20 # max freq, default 1/50 = 0.05 (if bandpass)
-f = 1   # cutoff frequency, default None (if low/high pass)
+f1 = 1.  # min freq, default 1/200 = 0.005 (if bandpass)
+f2 = 20. # max freq, default 1/50 = 0.05 (if bandpass)
+f = None   # cutoff frequency, default None (if low/high pass)
 
 # Select a reference station to plot by network, name, and location (e.g. CH.FUSIO.,CH.GRIMS.)
 station = "S062"
@@ -88,8 +88,8 @@ save_option = "png" # Save format (Default: "png")
 save_dpi    = 120   # Saved figure resolution (Default: 120)
 
 # Parameters for GMV
-vmin = -0.1   # colorbar min, default: -0.1
-vmax =  0.1   # colorbar max, default: 0.1
+vmin = -0.2   # colorbar min, default: -0.1
+vmax =  0.2   # colorbar max, default: 0.1
 scale = 0.15  # lateral motion amplification factor (default : 0.65)
 
 ##################################################################################################

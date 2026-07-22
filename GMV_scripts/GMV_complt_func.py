@@ -10,7 +10,7 @@ from GMV_utils import phase_marker
 from matplotlib.ticker import MultipleLocator # (H)
 from pygmt.datasets import load_earth_relief # (H)
 import os # (H)
-import cv2 # (H)
+#import cv2 # (H)
 from PIL import Image # (H)
 import cartopy.crs as ccrs
 import matplotlib.image as mpimg
@@ -111,18 +111,18 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
     
     if timelabel == "hr":
         d_time        = 60*60
-        seismo_labels = np.arange(round(start/d_time *2 +0.5)/2, round(end/d_time *2 +0.5)/2, 0.5)
+        seismo_labels = np.linspace(round(start/d_time *2 + 0.5)/2, round(end/d_time *2 +0.5)/2, 9)
         print("Seismograms will be plotted in HOURS.")
     elif timelabel == "min":
         d_time        = 60
-        seismo_labels = np.arange(round(round(start/d_time*2 +1)/2, -1), round(round(end/d_time*2 +1)/2,-1), 15)
+        seismo_labels = np.linspace(round(round(start/d_time*2 +1)/2), round(round(end/d_time*2 +1)/2), 9)
         print("Seismograms will be plotted in MINUTES.")
     else:
         d_time = 1
         if plot_local:
-            seismo_labels = np.arange(int(start), int(end)+1, 100)
+            seismo_labels = np.linspace(int(start), int(end)+1, 9)
         else:
-            seismo_labels = np.arange(round(start+1, -3), round(end, -3)+1, 1000)
+            seismo_labels = np.linspace(round(start+1), round(end)+1, 9)
         print("Seismograms will be plotted in SECONDS.")
     
     if timeframes is None:
@@ -202,7 +202,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         imagebox = OffsetImage(arr_img, zoom=0.15)
         imagebox.image.axes = ax1
         ab = AnnotationBbox(imagebox, (1, 1),
-                            xybox=(-250., 235.),
+                            xybox=(-250., 200.),
                             xycoords='data',
                             boxcoords="offset points",
                             pad=0.5, frameon=False)
@@ -217,7 +217,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         phase_marker(thechosenone["arr"], ax2, "Z", start/d_time, end/d_time, timelabel=timelabel, plot_local=plot_local)
         
         ax2.grid(which='major') # (H)
-        ax2.set_xlim([start/d_time,end/d_time])
+        # ax2.set_xlim([(start)/d_time,end/d_time])
         ax2.set_ylim([-1.1,1.1]) 
         ax2.set_xticks(seismo_labels)
         ax2.set_xticklabels([])
@@ -233,7 +233,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
         ax3.axvline(x=(start+it*timestep)/d_time, color="r", linewidth=1.2) # Time marker
         
         ax3.grid(which='major') # (H)
-        ax3.set_xlim([start/d_time,end/d_time])
+       # ax3.set_xlim([(start)/d_time,end/d_time])
         ax3.set_ylim([-1.1,1.1]) 
         ax3.set_xticks(seismo_labels)
         ax3.set_xticklabels([])
@@ -258,7 +258,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
             ax4.set_xlabel('Time after origin [min]', fontsize=14)
         else:
             ax4.set_xlabel('Time after origin [s]', fontsize=14)
-        ax4.set_xlim([start/d_time,end/d_time])
+        # ax4.set_xlim([(start)/d_time,end/d_time])
         ax4.set_ylim([-1.1,1.1]) 
         ax4.set_xticks(seismo_labels)
         ax4.set_xticklabels(seismo_labels) 
@@ -289,7 +289,7 @@ def GMV_plot_MACIV(GMV, event_dic, stream_info, thechosenone,
 
 def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
              vmin, vmax, arr_img, map_files,
-             movie_directory, timeframes=None, timelabel="s",
+             movie_directory, timeframes=None, timelabel="min",
              plot_save=True, save_option="png", save_dpi=120,
              plot_local=False, plot_3c=True, plot_rotate=True):
     
@@ -336,20 +336,21 @@ def GMV_plot_MACIV_pygmt(GMV, event_dic, stream_info, thechosenone,
     
     if timelabel == "hr":
         d_time        = 60*60
-        seismo_labels = np.arange(round(start/d_time *2 +0.5)/2, round(end/d_time *2 +0.5)/2, 0.5)
+        seismo_labels = np.linspace(round(start/d_time *2 +0.5)/2, round(end/d_time *2 +0.5)/2, 10)
         print("Seismograms will be plotted in HOURS.")
     elif timelabel == "min":
         d_time        = 60
-        seismo_labels = np.arange(round(round(start/d_time*2 +1)/2, -1), round(round(end/d_time*2 +1)/2,-1), 15)
+        seismo_labels = np.linspace(round(round(start/d_time*2 +1)/2), round(round(end/d_time*2 +1)/2), 10)
         print("Seismograms will be plotted in MINUTES.")
     else:
         d_time = 1
         if plot_local:
-            seismo_labels = np.arange(int(start), int(end)+1, 100)
+            seismo_labels = np.linspace(int(start), int(end)+1, 10)
         else:
-            seismo_labels = np.arange(round(start+1, -3), round(end, -3)+1, 1000)
+            seismo_labels = np.linspace(round(start+1), round(end)+1, 10)
         print("Seismograms will be plotted in SECONDS.")
-    
+   
+
     if timeframes is None:
         raise ValueError("you must specify time frames to plot")
 
