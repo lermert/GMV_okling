@@ -1,0 +1,12 @@
+name: gmv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cartopy
+  - cmcrameri
+  - geopandas
+  - numpy
+  - obspy
+  - pygmt
+prefix: ./gmv
