@@ -488,7 +488,13 @@ def normalize(data_inv_dic, event_dic, f1, f2, start, end, ftype="bandpass", f=N
         endtime   = obspy.UTCDateTime(time_event_sec + end)
     
     # Filter and downsample streams
-    print ('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1))
+    if ftype == "bandpass":
+        print('Filtering between %.2f s and %.2f s...' % (1/f2, 1/f1))
+    elif ftype == "lowpass":
+        print(f"Applying lowpass at {f} Hz...")
+    elif ftype == "highpass":
+        print(f"Applying highpass at {f} Hz...")
+    
     st_all_raw = st1+st2+st3
 
     st_all_f = filter_streams(st_all_raw, f1, f2, f=f, ftype=ftype)
