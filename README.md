@@ -49,7 +49,9 @@ ex : 7M.C003.xml
 3) Put the .pkl or .ml file in the folder data/EVENT_INFO
 (if needed, info can also be entered manually, see "readevent" in "GMV.utils.py")
 
-In the end, your data should follow the file paths shown in the diagram below
+The .ml file can be created using the create_quakeml_file.py (see description below).
+
+In the end, your data should follow the file paths shown in the diagram below.
 
 4) You can also put your background map and logo (as a png with a Plate Carree projection) in the folder "images".
 A map background and logo are provided as examples so you can skip this step at first try.
